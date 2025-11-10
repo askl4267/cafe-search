@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>OSAKA CAFE FINDER</title>
+  <title>大阪カフェ検索</title>
 
   <!-- Google Fonts：本文は丸めの日本語サンセリフ、見出しはクラシックなセリフ -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,351 +35,464 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 
-<body class="text-coffee-900 font-sans">
+<body class="text-coffee-900 font-sans" data-api-base="https://cafe-search-api.askl4267.workers.dev">
   <!-- Header -->
-  <header class="sticky top-0 z-50 bg-cream-100/80 backdrop-blur border-b border-coffee-200">
+  <header class="sticky top-0 z-50 bg-cream-100/80 backdrop-blur border-b border-coffee-200" role="banner">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-coffee-600"></div>
+        <div class="w-9 h-9 rounded-xl bg-coffee-600" aria-hidden="true"></div>
         <div class="font-display text-2xl tracking-wide">Osaka Cafe Finder</div>
       </div>
-      <div id="headerSummary" class="ml-4 text-sm text-coffee-600 hidden md:block"></div>
+      <div id="headerSummary" class="ml-4 text-sm text-coffee-600 hidden md:block" aria-live="polite"></div>
       <div class="ml-auto text-xs text-coffee-500">Powered by Hot Pepper</div>
     </div>
   </header>
 
-  <!-- Hero -->
-<section class="border-b border-coffee-100">
-  <div class="max-w-7xl mx-auto px-4 py-8 sm:py-12">
-    <h1 class="font-display text-3xl sm:text-4xl text-coffee-800">今日はどんなカフェ気分？</h1>
-    <p class="text-coffee-700/80 mt-2">エリア・駐車・禁煙で絞って、雰囲気の合うお店を見つけよう。</p>
+  <!-- Hero / 検索フォーム領域 -->
+  <section class="border-b border-coffee-100" aria-labelledby="heroTitle">
+    <div class="max-w-7xl mx-auto px-4 py-8 sm:py-12">
+      <h1 id="heroTitle" class="font-display text-3xl sm:text-4xl text-coffee-800">今日はどんなカフェ気分？</h1>
+      <p class="text-coffee-700/80 mt-2">エリア・駐車・禁煙で絞って、雰囲気の合うお店を見つけよう。</p>
 
-    <!-- Filter card（検索フォームは必ずこのコンテナの中に置く） -->
-    <div class="mt-6 bg-cream-50/70 border border-coffee-200 rounded-2xl shadow-card p-4 sm:p-6">
+      <!-- Filter card（検索フォームはこのコンテナ内に保持） -->
+      <div class="mt-6 bg-cream-50/70 border border-coffee-200 rounded-2xl shadow-card p-4 sm:p-6">
 
-      <!-- ▼ エリア選択（中→小ツリー） -->
-      <section class="bg-cream-100/60 border border-cream-200 rounded-2xl p-4">
-        <h3 class="text-coffee-800 font-semibold mb-2">エリア</h3>
+        <!-- ▼ エリア選択（中→小ツリー） -->
+        <section class="bg-cream-100/60 border border-cream-200 rounded-2xl p-4" aria-labelledby="areaTitle">
+          <h2 id="areaTitle" class="text-coffee-800 font-semibold mb-2">エリア</h2>
 
-        <!-- 中エリア（横並びチップ） -->
-        <div id="midChips" class="flex flex-wrap gap-2 mb-3"></div>
+          <!-- 中エリア（横並びチップ） -->
+          <div id="midChips" class="flex flex-wrap gap-2 mb-3" role="group" aria-label="中エリア"></div>
 
-        <!-- 小エリア（中エリア未選択のときは非表示） -->
-        <div id="smallWrapper" class="space-y-3 hidden">
-          <div class="text-sm text-coffee-700 font-semibold">小エリア</div>
-          <div id="smallPanels" class="space-y-3"></div>
-        </div>
-
-        <!-- ハード条件 -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-          <label class="block">
-            <span class="text-sm text-coffee-700">駐車</span>
-            <select id="parking" class="w-full rounded-xl border border-cream-300 bg-white p-2">
-              <option value="any">指定なし</option>
-              <option value="has">あり</option>
-              <option value="none">なし</option>
-            </select>
-          </label>
-          <label class="block">
-            <span class="text-sm text-coffee-700">禁煙</span>
-            <select id="smoking" class="w-full rounded-xl border border-cream-300 bg-white p-2">
-              <option value="any">指定なし</option>
-              <option value="non_smoking">全面禁煙</option>
-              <option value="has_non_smoking">禁煙席あり</option>
-            </select>
-          </label>
-          <div class="flex items-end">
-            <button id="search" class="w-full bg-coffee-600 hover:bg-coffee-700 text-white rounded-xl py-2">
-              検索する
-            </button>
+          <!-- 小エリア（中エリア未選択のときは非表示） -->
+          <div id="smallWrapper" class="space-y-3 hidden">
+            <div class="text-sm text-coffee-700 font-semibold">小エリア</div>
+            <div id="smallPanels" class="space-y-3"></div>
           </div>
-        </div>
-      </section>
+
+          <!-- ハード条件 -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+            <label class="block">
+              <span class="text-sm text-coffee-700">駐車</span>
+              <select id="parking" class="w-full rounded-xl border border-cream-300 bg-white p-2" aria-label="駐車">
+                <option value="any">指定なし</option>
+                <option value="has">あり</option>
+                <option value="none">なし</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="text-sm text-coffee-700">禁煙</span>
+              <select id="smoking" class="w-full rounded-xl border border-cream-300 bg-white p-2" aria-label="禁煙">
+                <option value="any">指定なし</option>
+                <option value="non_smoking">全面禁煙</option>
+                <option value="has_non_smoking">禁煙席あり</option>
+              </select>
+            </label>
+            <div class="flex items-end">
+              <button id="search" class="w-full bg-coffee-600 hover:bg-coffee-700 text-white rounded-xl py-2" type="button">
+                検索する
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
+  <section class="max-w-7xl mx-auto px-4 mt-6">
+    <!-- ▼ 件数（上部に表示） -->
+    <!-- <p id="summaryTop" class="text-sm text-coffee-700/80 mb-2" aria-live="polite">該当: 0 件</p>　-->
 
-<!-- ▼ ページャ + 件数（同じ高さのバー） -->
-<!--
-<section class="max-w-7xl mx-auto px-4 mt-6">
-  <div id="toolbar" class="flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <button id="prev"
-        class="px-3 py-2 rounded-xl border border-coffee-200 text-coffee-800 hover:bg-cream-200/60 disabled:opacity-40"
-        disabled>← 前へ</button>
-      <span id="pageInfo" class="text-sm text-coffee-700">1 / 1</span>
-      <button id="next"
-        class="px-3 py-2 rounded-xl border border-coffee-200 text-coffee-800 hover:bg-cream-200/60 disabled:opacity-40">
-        次へ →
-      </button>
-    </div>
-    <p id="summary" class="text-sm text-coffee-700/80">該当: 0 件</p>
-  </div>
--->
-<section class="max-w-7xl mx-auto px-4 mt-6">
-  <!-- ▼ 件数（上部に表示） -->
-  <p id="summaryTop" class="text-sm text-coffee-700/80 mb-2">該当: 0 件</p>
+    <!-- ▼ カード -->
+    <div id="cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" aria-live="polite" aria-busy="false"></div>
 
-  <!-- ▼ カード -->
-  <div id="cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <!-- ▼ ページャ（下部） -->
+    <nav id="pager" class="mt-6 flex items-center justify-center gap-2" aria-label="ページ切替"></nav>
+  </section>
 
-  <!-- ▼ ページャ（下部） -->
-  <nav id="pager" class="mt-6 flex items-center justify-center gap-2"></nav>
-</section>
-
+  <!-- エラートースト -->
+  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 hidden bg-red-600 text-white text-sm px-4 py-2 rounded-xl shadow-lg" role="alert"></div>
 
 <script>
 (() => {
-  // ★あなたの Worker（末尾スラなし）
-  const API_BASE = "https://cafe-search-api.askl4267.workers.dev";
+  // =============================
+  // ユーティリティ
+  // =============================
+  const qs  = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const createEl = (tag, props = {}, children = []) => {
+    const el = document.createElement(tag);
+    Object.entries(props).forEach(([k, v]) => {
+      if (k === 'class') el.className = v;
+      else if (k === 'dataset') Object.assign(el.dataset, v);
+      else if (k in el) el[k] = v; else el.setAttribute(k, v);
+    });
+    [].concat(children).filter(Boolean).forEach(ch => el.appendChild(typeof ch === 'string' ? document.createTextNode(ch) : ch));
+    return el;
+  };
+  const fmt = (n) => new Intl.NumberFormat('ja-JP').format(n);
+  const showToast = (msg) => {
+    const t = qs('#toast');
+    t.textContent = msg; t.classList.remove('hidden');
+    window.clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => t.classList.add('hidden'), 4000);
+  };
 
-  // ---- state -------------------------------------------------------------
-  let currentPage = 1;
-  /** 全エリアのマスタ {code,name} */
-  let middleMaster = [];  // 中エリア
-  let smallMaster  = [];  // 小エリア
-  /** 選択中 */
-  const midsSelected  = new Set();  // 中エリア（チップ）
-  const smallSelected = new Set();  // 小エリア（チェック）
+  // =============================
+  // 定数と状態
+  // =============================
+  const API_BASE = document.body.dataset.apiBase || 'https://cafe-search-api.askl4267.workers.dev';
 
-  // ---- utilities ---------------------------------------------------------
-  const el  = (sel) => document.querySelector(sel);
-  const els = (sel) => Array.from(document.querySelectorAll(sel));
+  // API呼び出しのキャンセル制御用
+  let searchAborter = null;
+  let countAborter  = null;
 
-  function setLoading() {
-    const grid = el('#cards');
-    grid.innerHTML = '';
-    for (let i = 0; i < 6; i++) {
-      const sk = document.createElement('div');
-      sk.className = 'skeleton h-[220px] rounded-2xl';
-      grid.appendChild(sk);
-    }
-  }
+  // マスタと選択状態
+  /** @type {{code:string,name:string}[]} */
+  let middleMaster = [];
+  /** @type {{code:string,name:string, middle:string}[]} */
+  let smallMaster  = [];
 
-  /** 件数APIを叩いて {middle: Map, small: Map} を返す */
+  const state = {
+    // 選択状態（集合）
+    midsSelected:  new Set(),   // 中エリア
+    smallSelected: new Set(),   // 小エリア
+    // ハード条件
+    parking: 'any',
+    smoking: 'any',
+    // ページング
+    page: 1,
+  };
+
+  // =============================
+  // URL <-> 状態 同期
+  // =============================
+  const readStateFromURL = () => {
+    const url = new URL(location.href);
+    const g = (key, fallback) => url.searchParams.get(key) ?? fallback;
+    state.parking = g('parking', state.parking);
+    state.smoking = g('smoking', state.smoking);
+    state.page    = parseInt(g('page', String(state.page)), 10) || 1;
+    const mids = g('middle', '');
+    const small = g('small', '');
+    state.midsSelected  = new Set(mids ? mids.split(',') : []);
+    state.smallSelected = new Set(small ? small.split(',') : []);
+  };
+
+  const writeStateToURL = () => {
+    const url = new URL(location.href);
+    const sp = url.searchParams;
+    sp.set('parking', state.parking);
+    sp.set('smoking', state.smoking);
+    sp.set('page', String(state.page));
+    state.midsSelected.size  ? sp.set('middle', [...state.midsSelected].join(',')) : sp.delete('middle');
+    state.smallSelected.size ? sp.set('small',  [...state.smallSelected].join(',')) : sp.delete('small');
+    history.replaceState(null, '', url);
+  };
+
+  // =============================
+  // API 呼び出し
+  // =============================
+  /** 件数APIを叩いて {midMap, smallMap} を返す */
   async function fetchAreaCounts() {
-    const parking = el('#parking').value;     // has/none/any
-    const smoking = el('#smoking').value;     // non_smoking/has_non_smoking/any
-    const qs = new URLSearchParams({ parking, smoking });
-    if (midsSelected.size) qs.set('middle', Array.from(midsSelected).join(','));
+    // 既存のリクエストを中断
+    if (countAborter) countAborter.abort();
+    countAborter = new AbortController();
 
-    const r = await fetch(`${API_BASE}/area_counts?${qs}`);
+    const qsObj = new URLSearchParams({ parking: state.parking, smoking: state.smoking });
+    if (state.midsSelected.size) qsObj.set('middle', [...state.midsSelected].join(','));
+
+    const r = await fetch(`${API_BASE}/area_counts?${qsObj}`, { signal: countAborter.signal });
     if (!r.ok) throw new Error(`/area_counts ${r.status}`);
     const j = await r.json();
     return {
-      midMap:   new Map((j.middle||[]).map(({code,cnt}) => [code, cnt])),
-      smallMap: new Map((j.small ||[]).map(({code,cnt}) => [code, cnt])),
+      midMap:   new Map((j.middle || []).map(({ code, cnt }) => [code, cnt])),
+      smallMap: new Map((j.small  || []).map(({ code, cnt }) => [code, cnt])),
     };
   }
 
-  // ---- renderers ---------------------------------------------------------
-  async function renderMidChips() {
-    const { midMap } = await fetchAreaCounts();
-    const box = el('#midChips');
-    box.innerHTML = '';
+  /** 検索API */
+  async function fetchSearch(page = 1) {
+    // 既存のリクエストを中断
+    if (searchAborter) searchAborter.abort();
+    searchAborter = new AbortController();
 
-    middleMaster.forEach(m => {
-      const n = midMap.get(m.code) || 0;
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className =
-        'px-3 py-1.5 rounded-full border text-sm transition ' +
-        (midsSelected.has(m.code)
-          ? 'bg-coffee-700 text-white border-coffee-700'
-          : 'border-coffee-200 text-coffee-800 hover:bg-cream-200/60');
-      chip.textContent = n ? `${m.name}（${n}）` : m.name;
-      chip.dataset.code = m.code;
-      chip.addEventListener('click', async () => {
-        if (midsSelected.has(m.code)) midsSelected.delete(m.code);
-        else midsSelected.add(m.code);
-        await renderMidChips();     // 自分の見た目＆件数更新
-        await renderSmallPanels();  // 小エリア再生成
-      });
-      box.appendChild(chip);
+    const sp = new URLSearchParams({
+      page: String(page),
+      parking: state.parking,
+      smoking: state.smoking,
     });
+    if (state.midsSelected.size)  sp.set('middle', [...state.midsSelected].join(','));
+    if (state.smallSelected.size) sp.set('small',  [...state.smallSelected].join(','));
+
+    const url = `${API_BASE}/search?${sp}`;
+    const r = await fetch(url, { signal: searchAborter.signal });
+    if (!r.ok) throw new Error(`/search ${r.status}`);
+    return r.json();
+  }
+
+  // =============================
+  // レンダリング
+  // =============================
+  function setLoadingCards(count = 6) {
+    const grid = qs('#cards');
+    grid.setAttribute('aria-busy', 'true');
+    grid.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      grid.appendChild(createEl('div', { class: 'skeleton h-[220px] rounded-2xl' }));
+    }
+  }
+
+  async function renderMidChips() {
+    try {
+      const { midMap } = await fetchAreaCounts();
+      const box = qs('#midChips');
+      box.innerHTML = '';
+
+      middleMaster.forEach((m) => {
+        const selected = state.midsSelected.has(m.code);
+        const cnt = midMap.get(m.code) || 0;
+        const btn = createEl('button', {
+          type: 'button',
+          role: 'switch',
+          'aria-checked': String(selected),
+          class:
+            'px-3 py-1.5 rounded-full border text-sm transition ' +
+            (selected
+              ? 'bg-coffee-700 text-white border-coffee-700'
+              : 'border-coffee-200 text-coffee-800 hover:bg-cream-200/60'),
+        }, `${m.name}${cnt ? `（${fmt(cnt)}）` : ''}`);
+
+        btn.addEventListener('click', async () => {
+          selected ? state.midsSelected.delete(m.code) : state.midsSelected.add(m.code);
+          // 中エリア変更時は小エリア選択を一旦クリア（片落ち防止）
+          state.smallSelected.clear();
+          await renderMidChips();
+          await renderSmallPanels();
+        });
+        box.appendChild(btn);
+      });
+    } catch (err) {
+      console.error(err);
+      showToast('エリア件数の取得に失敗しました');
+    }
   }
 
   async function renderSmallPanels() {
-    const smallWrapper = el('#smallWrapper');
-    const wrap = el('#smallPanels');
+    const smallWrapper = qs('#smallWrapper');
+    const wrap = qs('#smallPanels');
 
-    // 中エリア未選択 → 完全に隠す
-    if (!midsSelected.size) {
-      if (wrap) wrap.innerHTML = '';
-      if (smallWrapper) smallWrapper.classList.add('hidden');
+    // 中エリア未選択 → 非表示
+    if (!state.midsSelected.size) {
+      wrap.innerHTML = '';
+      smallWrapper.classList.add('hidden');
       return;
     }
+    smallWrapper.classList.remove('hidden');
 
-    // 以降は表示
-    if (smallWrapper) smallWrapper.classList.remove('hidden');
+    try {
+      const { smallMap } = await fetchAreaCounts();
+      wrap.innerHTML = '';
 
-    const { smallMap } = await fetchAreaCounts();
-    wrap.innerHTML = '';
+      // 表示候補：件数>0 の小エリア + 選択中の中エリアに属するもの
+      const mids = state.midsSelected;
+      const candidates = smallMaster.filter(s => mids.has(s.middle) && (smallMap.get(s.code) || 0) > 0);
 
-    // 件数>0 の小エリアのみ
-    const candidates = smallMaster.filter(s => (smallMap.get(s.code) || 0) > 0);
+      if (!candidates.length) {
+        wrap.appendChild(createEl('p', { class: 'text-sm text-coffee-600' }, '選択中の条件に合う小エリアはありません。'));
+        return;
+      }
 
-    const grid = document.createElement('div');
-    grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2';
+      const grid = createEl('div', { class: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2' });
 
-    candidates
-      .sort((a,b)=>a.name.localeCompare(b.name,'ja'))
-      .forEach(s => {
-        const n = smallMap.get(s.code) || 0;
-        const id = `sm-${s.code}`;
-        const label = document.createElement('label');
-        label.className = 'flex items-center gap-2 rounded-xl border border-cream-300 bg-white px-3 py-2';
-        label.innerHTML = `
-          <input id="${id}" type="checkbox" class="rounded" ${smallSelected.has(s.code)?'checked':''}>
-          <span class="text-sm">${n ? `${s.name}（${n}）` : s.name}</span>
-        `;
-        label.querySelector('input').addEventListener('change', (e) => {
-          if (e.target.checked) smallSelected.add(s.code);
-          else smallSelected.delete(s.code);
+      candidates
+        .sort((a,b)=>a.name.localeCompare(b.name,'ja'))
+        .forEach(s => {
+          const cnt = smallMap.get(s.code) || 0;
+          const label = createEl('label', { class: 'flex items-center gap-2 rounded-xl border border-cream-300 bg-white px-3 py-2' });
+          const input = createEl('input', { type: 'checkbox', class: 'rounded', checked: state.smallSelected.has(s.code), 'aria-label': s.name });
+          input.addEventListener('change', (e) => {
+            e.target.checked ? state.smallSelected.add(s.code) : state.smallSelected.delete(s.code);
+          });
+          const name = createEl('span', { class: 'text-sm' }, `${s.name}${cnt ? `（${fmt(cnt)}）` : ''}`);
+          label.appendChild(input); label.appendChild(name);
+          grid.appendChild(label);
         });
-        grid.appendChild(label);
-      });
 
-    if (!candidates.length) {
-      const p = document.createElement('p');
-      p.className = 'text-sm text-coffee-600';
-      p.textContent = '選択中の条件に合う小エリアはありません。';
-      wrap.appendChild(p);
-    } else {
       wrap.appendChild(grid);
+    } catch (err) {
+      console.error(err);
+      showToast('小エリア情報の取得に失敗しました');
     }
   }
 
   function renderPager({ page, total_pages }) {
-  const nav = document.getElementById('pager');
-  nav.innerHTML = '';
+    const nav = qs('#pager');
+    nav.innerHTML = '';
 
-  const makeBtn = (label, disabled, onClick, active = false, asDots = false) => {
-    const el = document.createElement(asDots ? 'span' : 'button');
-    el.textContent = label;
-    if (asDots) {
-      el.className = 'px-2 text-coffee-500';
-    } else {
-      el.type = 'button';
-      el.disabled = !!disabled;
-      el.className =
-        'h-10 min-w-10 px-3 rounded-xl border transition ' +
-        (active
-          ? 'bg-coffee-800 text-white border-coffee-800'
-          : 'bg-white text-coffee-800 border-coffee-200 hover:bg-cream-200/60 disabled:opacity-40');
-      if (onClick) el.addEventListener('click', onClick);
+    const makeBtn = (label, disabled, onClick, active = false, asDots = false) => {
+      const el = asDots ? createEl('span', { class: 'px-2 text-coffee-500' }, label)
+                        : createEl('button', {
+                            type: 'button',
+                            disabled: !!disabled,
+                            class: 'h-10 min-w-10 px-3 rounded-xl border transition ' + (active
+                              ? 'bg-coffee-800 text-white border-coffee-800'
+                              : 'bg-white text-coffee-800 border-coffee-200 hover:bg-cream-200/60 disabled:opacity-40'),
+                          }, label);
+      if (!asDots && onClick) el.addEventListener('click', onClick);
+      nav.appendChild(el);
+    };
+
+    // 前へ
+    makeBtn('前へ', page <= 1, () => run(page - 1));
+
+    // 表示するページ集合（1 … 近傍 … 最後）
+    const pages = new Set([1]);
+    const start = Math.max(2, page - 2);
+    const end   = Math.min(total_pages - 1, page + 2);
+    for (let p = start; p <= end; p++) pages.add(p);
+    if (total_pages > 1) pages.add(total_pages);
+
+    const list = [...pages].sort((a, b) => a - b);
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      if (i > 0 && list[i - 1] !== p - 1) makeBtn('…', true, null, false, true);
+      makeBtn(String(p), false, () => run(p), p === page);
     }
-    nav.appendChild(el);
-  };
 
-  // 前へ
-  makeBtn('前へ', page <= 1, () => run(page - 1));
+    // 次へ
+    makeBtn('次へ', page >= total_pages, () => run(page + 1));
 
-  // 表示するページ集合を作成（1 / … / 近傍 / … / 最後）
-  const pages = new Set();
-  pages.add(1);
-  const start = Math.max(2, page - 2);
-  const end   = Math.min(total_pages - 1, page + 2);
-  for (let p = start; p <= end; p++) pages.add(p);
-  if (total_pages > 1) pages.add(total_pages);
-
-  const list = [...pages].sort((a, b) => a - b);
-
-  // 省略記号を差し込みながらボタン描画
-  for (let i = 0; i < list.length; i++) {
-    const p = list[i];
-    if (i > 0 && list[i - 1] !== p - 1) {
-      makeBtn('…', true, null, false, true);
+    // 下部の情報テキスト
+    let info = document.getElementById('pageInfoBottom');
+    if (!info) {
+      info = createEl('div', { id: 'pageInfoBottom', class: 'w-full text-center text-sm text-coffee-600 mt-2' });
+      nav.after(info);
     }
-    makeBtn(String(p), false, () => run(p), p === page);
+    info.textContent = `${page}/${total_pages}ページ`;
   }
 
-  // 次へ
-  makeBtn('次へ', page >= total_pages, () => run(page + 1));
+  // カード描画
+  function renderCards(items) {
+    const grid = qs('#cards');
+    grid.setAttribute('aria-busy', 'false');
+    grid.innerHTML = '';
 
-  // 「x/総ページ」を1つだけ描画・更新
-  let info = document.getElementById('pageInfoBottom');
-  if (!info) {
-    info = document.createElement('div');
-    info.id = 'pageInfoBottom';
-    info.className = 'w-full text-center text-sm text-coffee-600 mt-2';
-    nav.after(info);
-  }
-  info.textContent = `${page}/${total_pages}ページ`;
-}
+    if (!items || !items.length) {
+      grid.appendChild(createEl('p', { class: 'text-sm text-coffee-600' }, '条件に合うお店が見つかりませんでした。条件を緩めて再検索してください。'));
+      return;
+    }
 
-
-  // ---- search & paginate -------------------------------------------------
-  async function run(page = 1) {
-    currentPage = page;
-    setLoading();
-
-    const parking = el('#parking').value;
-    const smoking = el('#smoking').value;
-
-    const q = new URLSearchParams({
-      page: String(currentPage),
-      parking, smoking,
-    });
-    if (midsSelected.size)  q.set('middle', Array.from(midsSelected).join(','));
-    if (smallSelected.size) q.set('small',  Array.from(smallSelected).join(','));
-
-    const r = await fetch(`${API_BASE}/search?${q}`);
-    if (!r.ok) throw new Error(`/search ${r.status}`);
-    const j = await r.json();
-
-    // 件数（上）＋ 右上の簡易件数（使っていれば）
-[document.getElementById('summaryTop'), document.getElementById('headerSummary')]
-  .filter(Boolean)
-  .forEach(el => {
-    el.textContent = `該当: ${j.total} 件（${j.page} / ${j.total_pages}）`;
-  });
-
-// ページャ
-renderPager({ page: j.page, total_pages: j.total_pages });
-
-    // カード
-    const grid = el('#cards'); grid.innerHTML = '';
     const frag = document.createDocumentFragment();
-    (j.items || []).forEach(s => {
-      const card = document.createElement('article');
-      card.className = 'bg-cream-100 rounded-2xl shadow-card overflow-hidden flex flex-col h-full';
-      const img = s.photo_l || 'https://placehold.co/600x450?text=Cafe';
-      card.innerHTML = `
-        <img src="${img}" alt="" class="w-full aspect-4-3 thumb">
-        <div class="p-4 flex flex-col gap-2 grow">
-          <h3 class="font-semibold text-coffee-800 line-clamp-2 min-h-[2.5rem]">${s.name}</h3>
-          <p class="text-sm text-coffee-700 line-clamp-2 min-h-[2.5rem]">${s.address||''}</p>
-          <p class="text-xs text-coffee-600">禁煙: ${s.non_smoking||'不明'} ／ Wi-Fi: ${s.wifi||'不明'} ／ 駐車: ${s.parking||'不明'}</p>
-          <div class="mt-auto pt-2">
-            <a href="${s.urls_pc}" target="_blank" rel="noopener"
-              class="inline-flex items-center gap-1 text-sm text-white bg-coffee-600 hover:bg-coffee-700 px-3 py-1.5 rounded-lg">
-              HotPepperで見る
-            </a>
-          </div>
-        </div>`;
+    items.forEach(s => {
+      const card = createEl('article', { class: 'bg-cream-100 rounded-2xl shadow-card overflow-hidden flex flex-col h-full' });
+
+      const img = createEl('img', {
+        src: s.photo_l || 'https://placehold.co/600x450?text=Cafe',
+        alt: '',
+        class: 'w-full thumb',
+        loading: 'lazy'
+      });
+
+      // テキスト部
+      const body = createEl('div', { class: 'p-4 flex flex-col gap-2 grow' });
+      const title = createEl('h3', { class: 'font-semibold text-coffee-800 line-clamp-2 min-h-[2.5rem]' }, s.name || '名称不明');
+      const addr  = createEl('p', { class: 'text-sm text-coffee-700 line-clamp-2 min-h-[2.5rem]' }, s.address || '住所不明');
+      const meta  = createEl('p', { class: 'text-xs text-coffee-600' }, `禁煙: ${s.non_smoking || '不明'} ／ Wi-Fi: ${s.wifi || '不明'} ／ 駐車: ${s.parking || '不明'}`);
+
+      const linkWrap = createEl('div', { class: 'mt-auto pt-2' });
+      const link = createEl('a', {
+        href: s.urls_pc || '#',
+        target: '_blank', rel: 'noopener',
+        class: 'inline-flex items-center gap-1 text-sm text-white bg-coffee-600 hover:bg-coffee-700 px-3 py-1.5 rounded-lg'
+      }, 'HotPepperで見る');
+
+      linkWrap.appendChild(link);
+      body.appendChild(title); body.appendChild(addr); body.appendChild(meta); body.appendChild(linkWrap);
+      card.appendChild(img); card.appendChild(body);
       frag.appendChild(card);
     });
     grid.appendChild(frag);
   }
 
-  // ---- boot --------------------------------------------------------------
-  el('#search').addEventListener('click', () => run(1));
-  el('#parking').addEventListener('change', async () => { await renderMidChips(); await renderSmallPanels(); });
-  el('#smoking').addEventListener('change', async () => { await renderMidChips(); await renderSmallPanels(); });
+  // 件数表示の更新
+  function updateSummaries(total, page, total_pages) {
+    [document.getElementById('summaryTop'), document.getElementById('headerSummary')]
+      .filter(Boolean)
+      .forEach(el => { el.textContent = `該当: ${fmt(total)} 件（${page} / ${total_pages}）`; });
+  }
 
-  (async () => {
+  // =============================
+  // 検索の実行
+  // =============================
+  async function run(page = 1) {
+    try {
+      state.page = page;
+      writeStateToURL();
+      setLoadingCards();
+
+      const j = await fetchSearch(page);
+      updateSummaries(j.total, j.page, j.total_pages);
+      renderPager({ page: j.page, total_pages: j.total_pages });
+      renderCards(j.items || []);
+    } catch (err) {
+      if (err?.name === 'AbortError') return; // 古いリクエストの中断
+      console.error(err);
+      showToast('検索に失敗しました。時間をおいて再度お試しください。');
+      qs('#cards').setAttribute('aria-busy', 'false');
+    }
+  }
+
+  // =============================
+  // 起動処理
+  // =============================
+  async function boot() {
+    // URL -> 状態 同期
+    readStateFromURL();
+
     // マスタ取得
-    const areas = await (await fetch(`${API_BASE}/areas`)).json();
-    middleMaster = (areas.middle || []);
-    smallMaster  = (areas.small  || []);
-    // 初期レンダリング
+    const areasResp = await fetch(`${API_BASE}/areas`);
+    if (!areasResp.ok) {
+      showToast('エリアマスタの取得に失敗しました');
+      return;
+    }
+    const areas = await areasResp.json();
+    middleMaster = areas.middle || [];
+    smallMaster  = (areas.small || []).map(s => ({ ...s, middle: s.middle || s.mcode || s.mid || '' }));
+
+    // UIへ初期状態を反映
+    qs('#parking').value = state.parking;
+    qs('#smoking').value = state.smoking;
+
     await renderMidChips();
     await renderSmallPanels();
-    // 初回検索
-    run(1);
-  })();
+    await run(state.page);
+  }
+
+  // =============================
+  // イベント: 入力変更
+  // =============================
+  const handleFilterChange = async () => {
+    state.page = 1; // フィルタ変更時は1ページ目へ
+    writeStateToURL();
+    await renderMidChips();
+    await renderSmallPanels();
+  };
+
+  // 過剰なAPI呼び出しを防ぐため、簡易デバウンス
+  let debounceTimer = null;
+  const debounce = (fn, ms = 200) => (...args) => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => fn(...args), ms);
+  };
+
+  // イベント登録
+  qs('#search').addEventListener('click', () => run(1));
+  qs('#parking').addEventListener('change', () => { state.parking = qs('#parking').value; debounce(handleFilterChange)(); });
+  qs('#smoking').addEventListener('change', () => { state.smoking = qs('#smoking').value; debounce(handleFilterChange)(); });
+
+  // 初期化
+  boot();
 })();
 </script>
 
