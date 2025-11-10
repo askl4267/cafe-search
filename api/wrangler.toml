@@ -1,0 +1,27 @@
+# api/wrangler.toml
+name = "api"
+main = "src/worker.js"
+workers_dev = true
+compatibility_date = "2025-10-17"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
+
+[[d1_databases]]
+binding = "DB"
+database_id = "75a0b892-a13c-4169-896c-876922ca08f7"
+
+[vars]
+HOTPEPPER_GENRE = "G014"
