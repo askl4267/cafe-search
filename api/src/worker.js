@@ -125,59 +125,50 @@ async function areasTree(req, env) {
   if (parking === "none") where.push(`parking LIKE '%なし%'`);
   if (smoking === "non_smoking")     where.push(`non_smoking LIKE '%全面禁煙%'`);
   if (smoking === "has_non_smoking") where.push(`non_smoking LIKE '%禁煙%'`);
+
   const whereSql = where.length ? "WHERE " + where.join(" AND ") : "";
 
-  // 中→小の件数（小は中ごとにカウント）
-  const sql = `
-    SELECT middle_area_code AS middle, small_area_code AS small, COUNT(*) AS cnt
+  // 中エリア（名前付き・件数付き）
+  const midsSql = `
+    SELECT
+      middle_area_code AS code,
+      COALESCE(middle_area_name, middle_area_code) AS name,
+      COUNT(*) AS cnt
     FROM shops
     ${whereSql}
-    GROUP BY middle_area_code, small_area_code
+    GROUP BY middle_area_code, middle_area_name
   `;
-  const { results } = await env.DB.prepare(sql).all();
+  const { results: mids } = await env.DB.prepare(midsSql).all();
 
-  // 中エリアの件数（小の総和でもよいが明示）
-  const sqlM = `
-    SELECT middle_area_code AS middle, COUNT(*) AS cnt
+  // 小エリア（中エリアごと、名前付き・件数付き）
+  const smallSql = `
+    SELECT
+      middle_area_code AS middle,
+      small_area_code AS code,
+      COALESCE(small_area_name, small_area_code) AS name,
+      COUNT(*) AS cnt
     FROM shops
     ${whereSql}
-    GROUP BY middle_area_code
+    GROUP BY middle_area_code, small_area_code, small_area_name
   `;
-  const { results: mids } = await env.DB.prepare(sqlM).all();
+  const { results: smalls } = await env.DB.prepare(smallSql).all();
 
-  // name 付与（名称マップはあなたの既存の定数/関数を使用）
-  const midCnt = new Map(mids.map(r => [r.middle, r.cnt]));
-  const treeMap = new Map(); // middle -> {code, name, cnt, small:[]}
-
-  // 中エリアの集合を先に作る
-  for (const m of mids) {
-    treeMap.set(m.middle, {
-      code: m.middle,
-      name: OSAKA_MIDDLE_NAMES[m.middle] ?? m.middle,
-      cnt: Number(m.cnt),
-      small: [],
-    });
+  // ツリー化
+  const map = new Map();
+  for (const m of (mids ?? [])) {
+    map.set(m.code, { code: m.code, name: m.name, cnt: Number(m.cnt), small: [] });
   }
-  // 小エリアをぶら下げる
-  for (const r of results) {
-    if (!treeMap.has(r.middle)) {
-      treeMap.set(r.middle, {
-        code: r.middle,
-        name: OSAKA_MIDDLE_NAMES[r.middle] ?? r.middle,
-        cnt: midCnt.get(r.middle) ?? 0,
-        small: [],
-      });
+  for (const s of (smalls ?? [])) {
+    if (!map.has(s.middle)) {
+      map.set(s.middle, { code: s.middle, name: s.middle, cnt: 0, small: [] });
     }
-    treeMap.get(r.middle).small.push({
-      code: r.small,
-      name: OSAKA_SMALL_NAMES[r.small] ?? r.small,
-      cnt: Number(r.cnt),
-    });
+    map.get(s.middle).small.push({ code: s.code, name: s.name, cnt: Number(s.cnt) });
   }
 
-  // 見やすい配列に
-  const middle = Array.from(treeMap.values())
-    .sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  const middle = Array.from(map.values())
+    .map(m => ({ ...m, small: m.small.sort((a,b)=> (a.name||'').localeCompare(b.name||'','ja')) }))
+    .sort((a,b)=> (a.name||'').localeCompare(b.name||'','ja'));
+
   return json({ middle });
 }
 
