@@ -1,4 +1,4 @@
-# Osaka Cafe Search
+# 大阪カフェ検索
 
 大阪エリアのカフェを検索・比較できる Web アプリです。Hot Pepper と Google Places のデータを Cloudflare D1（Managed SQLite）へ蓄積し、Cloudflare Workers で API 化。フロントは軽量な HTML/JS + Tailwind CSS で構築しています。
 
@@ -14,7 +14,6 @@
 - [構成図](#構成図)
 - [ER図](#er図)
 - [画面遷移図](#画面遷移図)
-- [セットアップ](#セットアップ)
 - [開発ルール](#開発ルール)
 - [今後の開発について](#今後の開発について)
 - [ライセンス](#ライセンス)
@@ -163,70 +162,6 @@ flowchart TD
 
 ---
 
-## セットアップ
-### 要件
-- Node.js / npm（ローカルでビルドする場合）
-- Cloudflare アカウント（Pages / Workers / D1 利用）
-
-### 1) 依存関係
-```bash
-npm install
-```
-
-### 2) 環境変数
-`.env.example` をコピーして `.env` を作成。Workers 側は Secret を使用してください（API キーはコミットしない）。
-```
-HOTPEPPER_API_KEY=...
-GOOGLE_API_KEY=...
-HOTPEPPER_GENRE=G014
-```
-
-### 3) ビルド（フロント）
-```bash
-npm run build
-# => dist/index.html, dist/styles.css が生成されます
-```
-
-### 4) Cloudflare Pages（ホスティング）
-- Build Command (Pages): `node -v && npm ci && npm run build`
-- Build Output Directory: `dist`
-- 取得した **Node.js v22.16.0 / npm 10.9.2** を README に反映済み
-
-### 5) Workers（API）
-`api/wrangler.toml`（抜粋）
-```toml
-name = "api"
-main = "src/worker.js"
-workers_dev = true
-compatibility_date = "2025-10-17"
-
-[[d1_databases]]
-binding = "DB"
-database_id = "..."
-
-[vars]
-HOTPEPPER_GENRE = "G014"
-```
-
-ローカル実行例：
-```bash
-# ローカル（開発）
-wrangler dev
-# デプロイ
-wrangler deploy
-```
-
-### 6) D1（DB）
-- D1 は Managed SQLite。`sqlite_version()` は無効化されているため数値は取得不可。
-- 接続確認に使えるクエリ：
-```sql
-SELECT 1; -- 接続テスト
-SELECT name FROM sqlite_master WHERE type='table'; -- テーブル一覧
-PRAGMA table_info(shops); -- スキーマ確認（例）
-```
-
----
-
 ## 開発ルール
 - **ディレクトリ**
   - `/src` … フロント資産
@@ -244,28 +179,8 @@ PRAGMA table_info(shops); -- スキーマ確認（例）
 - **スコアリング実装**：`coffee/sweets/food/openness/stylish` の 0–100 推定
   - ルールベース → 軽量 ML（レビュー語彙、メニュー、座席/テラス表現 等）
 - **類似推薦**：テキスト/属性のベクトル化 → 近傍検索で類似カフェ表示
-- **指標/KPI**：検索→詳細→外部送客の CTR/CVR、並び替え別の効果測定、A/B の導入
-- **キャッシュ戦略**：Workers KV / R2 検討、API レート制限対策
-- **自動テスト**：API Contract / E2E（Playwright）
-- **アクセシビリティ**：キーボード操作、コントラスト、ローディング状態の明示
 
 ---
 
 ## ライセンス
 MIT
-
----
-
-## スクリーンショット（任意）
-- `docs/` 配下に `screenshot-top.png`, `screenshot-detail.png` を置き、ここに貼るとポートフォリオとして伝わりやすくなります。
-
-```markdown
-![Search](docs/screenshot-top.png)
-![Detail](docs/screenshot-detail.png)
-```
-
-## トピック / About（任意）
-- GitHub の About に説明と Topics を追加：
-  - Description: 「大阪のカフェを条件検索できる Web アプリ。Cloudflare D1 + Workers + Hot Pepper / Google Places。」
-  - Topics: `portfolio`, `cloudflare-pages`, `cloudflare-workers`, `cloudflare-d1`, `tailwindcss`, `javascript`, `sqlite`, `google-places-api`
-
