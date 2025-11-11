@@ -1,0 +1,271 @@
+# Osaka Cafe Search
+
+大阪エリアのカフェを検索・比較できる Web アプリです。Hot Pepper と Google Places のデータを Cloudflare D1（Managed SQLite）へ蓄積し、Cloudflare Workers で API 化。フロントは軽量な HTML/JS + Tailwind CSS で構築しています。
+
+> Live: `https://cafe-search.pages.dev`（公開中）
+
+---
+
+## 目次
+- [開発背景](#開発背景)
+- [主要機能](#主要機能)
+- [使用技術](#使用技術)
+- [技術選定の理由](#技術選定の理由)
+- [構成図](#構成図)
+- [ER図](#er図)
+- [画面遷移図](#画面遷移図)
+- [セットアップ](#セットアップ)
+- [開発ルール](#開発ルール)
+- [今後の開発について](#今後の開発について)
+- [ライセンス](#ライセンス)
+
+---
+
+## 開発背景
+- **目的**：ポートフォリオとして、データ連携 → API → UI まで一気通貫の実装力を提示する。
+- **課題感**：レビューや店舗情報は分散しており、ユーザーの**「気分」**（コーヒー重視 / スイーツ重視 / ゆっくり 等）に沿った発見体験が弱い。
+- **アプローチ**：
+  - 公開 API（Hot Pepper / Google Places）＋自前スキーマ（D1/SQLite）で**再利用可能なデータ基盤**を用意。
+  - Workers で**低レイテンシな API**を提供し、Cloudflare Pages で**グローバル配信**。
+  - シンプルなフロントで**初期描画を高速化**しつつ、UI を段階的に拡張。
+
+---
+
+## 主要機能
+- **検索・絞り込み**：エリア（中/小）やジャンル、キーワードでの検索。
+- **気分ベースの並び替え（予定）**：`coffee/sweets/food/openness/stylish` のスコアでソート。
+- **詳細ページ**：基本情報、営業時間、写真、レビュー（Google Places）を表示。
+- **類似カフェ推薦（予定）**：テキスト・属性の類似度に基づく推薦。
+- **突合（内部）**：Hot Pepper と Places の ID 突合テーブル `places_link` を管理。
+
+---
+
+## 使用技術
+> 数値は実測/lock からの**確定版**を記載（再現性のため）。
+
+| カテゴリ | 技術 | バージョン | 取得元/備考 |
+|---|---|---:|---|
+| Hosting | Cloudflare Pages | — | `cafe-search.pages.dev` |
+| Build Node | Node.js | **v22.16.0** | Pages のデプロイログ（`node -v`） |
+| Package | npm | **10.9.2** | Pages のデプロイログ |
+| Styling | Tailwind CSS | **3.4.18** | package-lock.json |
+| PostCSS | PostCSS | **8.5.6** | package-lock.json |
+| PostCSS | Autoprefixer | **10.4.21** | package-lock.json |
+| PostCSS | postcss-import | **15.1.0** | package-lock.json |
+| PostCSS | postcss-nested | **6.2.0** | package-lock.json |
+| PostCSS | postcss-js | **4.1.0** | package-lock.json |
+| PostCSS | postcss-load-config | **6.0.1** | package-lock.json |
+| Backend | Cloudflare Workers | **compatibility_date: 2025-10-17** | `api/wrangler.toml` |
+| DB | Cloudflare D1 (Managed SQLite) | **（バージョンは非公開）** | D1 は一部関数が無効化（`sqlite_version()`不可） |
+| Data Source | Hot Pepper Gourmet API | **ジャンル: G014** | `wrangler.toml [vars]` |
+| Data Source | Google Places API | — | Details / Photos / Field Masks |
+
+> 備考：Workers は一般的な“バージョン番号”ではなく **compatibility_date** を記載するのが通例です。
+
+---
+
+## 技術選定の理由
+- **Cloudflare Workers / Pages**：CDN エッジ実行で低レイテンシ、無料〜低コストのスケール。
+- **Cloudflare D1**：SQLite 準拠で扱いやすい。スキーマ設計が軽く、個人開発でも運用容易。
+- **HTML/JS + Tailwind**：依存を最小化して高速初期表示。CSS 設計コストを削減。
+- **Hot Pepper + Places**：**量（Hot Pepper）×質（Places）**で相互補完。口コミ/写真/営業時間を充実させる。
+- **Mermaid 図**：ドキュメントをコードで管理し、変更に強い README を維持。
+
+---
+
+## 構成図
+```mermaid
+flowchart LR
+  U[User (Browser)] -->|fetch| FE[Frontend (HTML/JS)]
+  FE -->|XHR/Fetch| API[Cloudflare Workers API]
+  API --> D1[(Cloudflare D1\nManaged SQLite)]
+  API --> HP[Hot Pepper API]
+  API --> GP[Google Places API]
+  GP --> PH[Place Photos]
+
+  subgraph Cloudflare
+  FE
+  API
+  D1
+  end
+```
+
+---
+
+## ER図
+```mermaid
+erDiagram
+  shops {
+    TEXT id PK
+    TEXT name
+    TEXT genre
+    TEXT area_middle
+    TEXT area_small
+    TEXT address
+    REAL lat
+    REAL lng
+    TEXT open_hours
+    TEXT url
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  places_link {
+    TEXT places_id PK
+    TEXT shop_id FK
+    TEXT shop_name
+    DATETIME created_at
+    DATETIME updated_at
+    TEXT note
+  }
+
+  place_details {
+    TEXT places_id PK
+    TEXT types
+    TEXT primaryType
+    REAL rating
+    INTEGER userRatingCount
+    TEXT priceLevel
+    TEXT openingHoursJson
+    TEXT adrAddress
+    TEXT formattedAddress
+    INTEGER utcOffsetMinutes
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  place_reviews {
+    INTEGER id PK
+    TEXT places_id FK
+    TEXT author
+    REAL rating
+    TEXT text
+    DATETIME time
+    DATETIME created_at
+  }
+
+  shops ||--o{ places_link : link
+  place_details ||--o{ place_reviews : has
+  places_link }o--|| shops : belongs
+  place_details ||--|| places_link : sync_by(places_id)
+```
+
+---
+
+## 画面遷移図
+```mermaid
+flowchart TD
+  A[Home/Search] --> B[Search Results]
+  B -->|click card| C[Shop Detail]
+  C --> D[Similar Cafes (planned)]
+  A --> E[About/How it works]
+```
+
+---
+
+## セットアップ
+### 要件
+- Node.js / npm（ローカルでビルドする場合）
+- Cloudflare アカウント（Pages / Workers / D1 利用）
+
+### 1) 依存関係
+```bash
+npm install
+```
+
+### 2) 環境変数
+`.env.example` をコピーして `.env` を作成。Workers 側は Secret を使用してください（API キーはコミットしない）。
+```
+HOTPEPPER_API_KEY=...
+GOOGLE_API_KEY=...
+HOTPEPPER_GENRE=G014
+```
+
+### 3) ビルド（フロント）
+```bash
+npm run build
+# => dist/index.html, dist/styles.css が生成されます
+```
+
+### 4) Cloudflare Pages（ホスティング）
+- Build Command (Pages): `node -v && npm ci && npm run build`
+- Build Output Directory: `dist`
+- 取得した **Node.js v22.16.0 / npm 10.9.2** を README に反映済み
+
+### 5) Workers（API）
+`api/wrangler.toml`（抜粋）
+```toml
+name = "api"
+main = "src/worker.js"
+workers_dev = true
+compatibility_date = "2025-10-17"
+
+[[d1_databases]]
+binding = "DB"
+database_id = "..."
+
+[vars]
+HOTPEPPER_GENRE = "G014"
+```
+
+ローカル実行例：
+```bash
+# ローカル（開発）
+wrangler dev
+# デプロイ
+wrangler deploy
+```
+
+### 6) D1（DB）
+- D1 は Managed SQLite。`sqlite_version()` は無効化されているため数値は取得不可。
+- 接続確認に使えるクエリ：
+```sql
+SELECT 1; -- 接続テスト
+SELECT name FROM sqlite_master WHERE type='table'; -- テーブル一覧
+PRAGMA table_info(shops); -- スキーマ確認（例）
+```
+
+---
+
+## 開発ルール
+- **ディレクトリ**
+  - `/src` … フロント資産
+  - `/api` … Workers（API）
+  - `index.html` … エントリ
+- **コーディング**
+  - Prettier/ESLint（導入予定）
+  - コミットメッセージ：`feat:`, `fix:`, `docs:` 等の prefix を推奨
+- **CI/CD**
+  - GitHub Actions で Lint / Build（将来導入）
+
+---
+
+## 今後の開発について
+- **スコアリング実装**：`coffee/sweets/food/openness/stylish` の 0–100 推定
+  - ルールベース → 軽量 ML（レビュー語彙、メニュー、座席/テラス表現 等）
+- **類似推薦**：テキスト/属性のベクトル化 → 近傍検索で類似カフェ表示
+- **指標/KPI**：検索→詳細→外部送客の CTR/CVR、並び替え別の効果測定、A/B の導入
+- **キャッシュ戦略**：Workers KV / R2 検討、API レート制限対策
+- **自動テスト**：API Contract / E2E（Playwright）
+- **アクセシビリティ**：キーボード操作、コントラスト、ローディング状態の明示
+
+---
+
+## ライセンス
+MIT
+
+---
+
+## スクリーンショット（任意）
+- `docs/` 配下に `screenshot-top.png`, `screenshot-detail.png` を置き、ここに貼るとポートフォリオとして伝わりやすくなります。
+
+```markdown
+![Search](docs/screenshot-top.png)
+![Detail](docs/screenshot-detail.png)
+```
+
+## トピック / About（任意）
+- GitHub の About に説明と Topics を追加：
+  - Description: 「大阪のカフェを条件検索できる Web アプリ。Cloudflare D1 + Workers + Hot Pepper / Google Places。」
+  - Topics: `portfolio`, `cloudflare-pages`, `cloudflare-workers`, `cloudflare-d1`, `tailwindcss`, `javascript`, `sqlite`, `google-places-api`
+
