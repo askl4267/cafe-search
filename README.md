@@ -73,92 +73,17 @@
 ---
 
 ## 構成図
-```mermaid
-flowchart LR
-  U[User (Browser)] -->|fetch| FE[Frontend (HTML/JS)]
-  FE -->|XHR/Fetch| API[Cloudflare Workers API]
-  API --> D1[(Cloudflare D1\nManaged SQLite)]
-  API --> HP[Hot Pepper API]
-  API --> GP[Google Places API]
-  GP --> PH[Place Photos]
-
-  subgraph Cloudflare
-  FE
-  API
-  D1
-  end
-```
+(作成中)
 
 ---
 
 ## ER図
-```mermaid
-erDiagram
-  shops {
-    TEXT id PK
-    TEXT name
-    TEXT genre
-    TEXT area_middle
-    TEXT area_small
-    TEXT address
-    REAL lat
-    REAL lng
-    TEXT open_hours
-    TEXT url
-    DATETIME created_at
-    DATETIME updated_at
-  }
-
-  places_link {
-    TEXT places_id PK
-    TEXT shop_id FK
-    TEXT shop_name
-    DATETIME created_at
-    DATETIME updated_at
-    TEXT note
-  }
-
-  place_details {
-    TEXT places_id PK
-    TEXT types
-    TEXT primaryType
-    REAL rating
-    INTEGER userRatingCount
-    TEXT priceLevel
-    TEXT openingHoursJson
-    TEXT adrAddress
-    TEXT formattedAddress
-    INTEGER utcOffsetMinutes
-    DATETIME created_at
-    DATETIME updated_at
-  }
-
-  place_reviews {
-    INTEGER id PK
-    TEXT places_id FK
-    TEXT author
-    REAL rating
-    TEXT text
-    DATETIME time
-    DATETIME created_at
-  }
-
-  shops ||--o{ places_link : link
-  place_details ||--o{ place_reviews : has
-  places_link }o--|| shops : belongs
-  place_details ||--|| places_link : sync_by(places_id)
-```
+(作成中)
 
 ---
 
 ## 画面遷移図
-```mermaid
-flowchart TD
-  A[Home/Search] --> B[Search Results]
-  B -->|click card| C[Shop Detail]
-  C --> D[Similar Cafes (planned)]
-  A --> E[About/How it works]
-```
+(作成中)
 
 ---
 
