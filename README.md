@@ -82,7 +82,7 @@
 
 ---
 
-## 画面遷
+## 画面
 ![TOP](docs/screens/top.png)
 
 ---
