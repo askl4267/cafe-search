@@ -11,12 +11,9 @@
 - [主要機能](#主要機能)
 - [使用技術](#使用技術)
 - [技術選定の理由](#技術選定の理由)
-- [構成図](#構成図)
-- [ER図](#er図)
-- [画面遷移図](#画面遷移図)
+- [画面](#画面)
 - [開発ルール](#開発ルール)
 - [今後の開発について](#今後の開発について)
-- [ライセンス](#ライセンス)
 
 ---
 
@@ -59,26 +56,14 @@
 | Data Source | Hot Pepper Gourmet API | **ジャンル: G014** | `wrangler.toml [vars]` |
 | Data Source | Google Places API | — | Details / Photos / Field Masks |
 
-> 備考：Workers は一般的な“バージョン番号”ではなく **compatibility_date** を記載するのが通例です。
-
 ---
 
 ## 技術選定の理由
 - **Cloudflare Workers / Pages**：CDN エッジ実行で低レイテンシ、無料〜低コストのスケール。
 - **Cloudflare D1**：SQLite 準拠で扱いやすい。スキーマ設計が軽く、個人開発でも運用容易。
 - **HTML/JS + Tailwind**：依存を最小化して高速初期表示。CSS 設計コストを削減。
-- **Hot Pepper + Places**：**量（Hot Pepper）×質（Places）**で相互補完。口コミ/写真/営業時間を充実させる。
+- **Hot Pepper + Places**： **量（Hot Pepper）×質（Places）**で相互補完。口コミ/写真/営業時間を充実させる。
 - **Mermaid 図**：ドキュメントをコードで管理し、変更に強い README を維持。
-
----
-
-## 構成図
-(作成中)
-
----
-
-## ER図
-(作成中)
 
 ---
 
@@ -104,8 +89,3 @@
 - **スコアリング実装**：`coffee/sweets/food/openness/stylish` の 0–100 推定
   - ルールベース → 軽量 ML（レビュー語彙、メニュー、座席/テラス表現 等）
 - **類似推薦**：テキスト/属性のベクトル化 → 近傍検索で類似カフェ表示
-
----
-
-## ライセンス
-MIT
