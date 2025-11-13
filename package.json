@@ -6,8 +6,8 @@
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "build:css": "npx tailwindcss -i ./src/input.css -o ./dist/styles.css --minify",
-    "build:static": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});for(const f of ['index.html','detail.html']){if(fs.existsSync(f))fs.copyFileSync(f,'dist/'+f);}if(fs.existsSync('docs'))fs.cpSync('docs','dist/docs',{recursive:true});if(fs.existsSync('_redirects'))fs.copyFileSync('_redirects','dist/_redirects');\"",
-    "build": "npm run clean && npm run build:css && npm run build:static"
+    "build:html": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});const api=process.env.API_BASE||'https://cafe-search-api.askl4267.workers.dev';for(const f of ['index.html','detail.html']){if(fs.existsSync(f)){let s=fs.readFileSync(f,'utf8').replace(/%API_BASE%/g,api);fs.writeFileSync('dist/'+f,s);}}if(fs.existsSync('docs'))fs.cpSync('docs','dist/docs',{recursive:true});if(fs.existsSync('_redirects'))fs.copyFileSync('_redirects','dist/_redirects');\"",
+    "build": "npm run clean && npm run build:css && npm run build:html"
   },
   "keywords": [],
   "author": "",

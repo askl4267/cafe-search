@@ -25,3 +25,13 @@ database_id = "75a0b892-a13c-4169-896c-876922ca08f7"
 
 [vars]
 HOTPEPPER_GENRE = "G014"
+
+[env.staging]
+name = "cafe-search-api-stg"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_id = "75a0b892-a13c-4169-896c-876922ca08f7"
+
+[env.staging.vars]
+HOTPEPPER_GENRE = "G014"
