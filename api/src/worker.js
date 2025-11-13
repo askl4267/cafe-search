@@ -125,16 +125,16 @@ export default {
     return areaCounts(req, env);
   }
 
-  // ルータに追加
-if (url.pathname === "/areas_tree") {
-  return areasTree(req, env);
-}
+    // ルータに追加
+  if (url.pathname === "/areas_tree") {
+    return areasTree(req, env);
+  }
 
-// 実装
-async function areasTree(req, env) {
-  const url = new URL(req.url);
-  const parking = url.searchParams.get("parking") ?? "any";
-  const smoking = url.searchParams.get("smoking") ?? "any";
+  // 実装
+  async function areasTree(req, env) {
+    const url = new URL(req.url);
+    const parking = url.searchParams.get("parking") ?? "any";
+    const smoking = url.searchParams.get("smoking") ?? "any";
 
   const where = [];
   if (parking === "has")  where.push(`parking LIKE '%あり%'`);
