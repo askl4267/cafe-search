@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "build:css": "npx tailwindcss -i ./src/input.css -o ./dist/styles.css --minify",
-    "build:html": "node -e \"require('fs').mkdirSync('dist',{recursive:true});require('fs').copyFileSync('index.html','dist/index.html')\"",
-    "build": "npm run build:css && npm run build:html"
+    "build:static": "node -e \"const fs=require('fs');fs.mkdirSync('dist',{recursive:true});for(const f of ['index.html','detail.html']){if(fs.existsSync(f))fs.copyFileSync(f,'dist/'+f);}if(fs.existsSync('docs'))fs.cpSync('docs','dist/docs',{recursive:true});if(fs.existsSync('_redirects'))fs.copyFileSync('_redirects','dist/_redirects');\"",
+    "build": "npm run clean && npm run build:css && npm run build:static"
   },
   "keywords": [],
   "author": "",
