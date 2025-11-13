@@ -80,6 +80,22 @@ export default {
       return search(req, env);
     }
 
+    if (url.pathname === "/shop" && req.method === "GET") {
+      const id = url.searchParams.get("id");
+      if (!id) return json({ error: "missing id" }, 400);
+    
+      const row = await env.DB
+        .prepare(`SELECT id,name,name_kana,address,lat,lng,large_area_code,middle_area_code,small_area_code,genre_code,
+                         budget_avg,capacity,non_smoking,wifi,parking,open_text,close_text,catch_text,urls_pc,photo_l,
+                         updated_at,middle_area_name,small_area_name
+                  FROM shops WHERE id = ?`)
+        .bind(id)
+        .first();
+    
+      if (!row) return json({ error: "not found" }, 404);
+      return json({ item: row });
+    }
+
     // ---- エリア一覧（UI候補用）: /areas ----
     // ---- エリア一覧（大阪版：地名で返す。DBに存在するコードのみ） ----
     if (url.pathname === "/areas") {
