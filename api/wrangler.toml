@@ -1,5 +1,5 @@
 # api/wrangler.toml
-name = "api"
+name = "cafe-search-api"
 main = "src/worker.js"
 workers_dev = true
 compatibility_date = "2025-10-17"
