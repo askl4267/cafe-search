@@ -353,9 +353,15 @@ renderPager({ page: j.page, total_pages: j.total_pages });
           <p class="text-sm text-coffee-700 line-clamp-2 min-h-[2.5rem]">${s.address||''}</p>
           <p class="text-xs text-coffee-600">禁煙: ${s.non_smoking||'不明'} ／ Wi-Fi: ${s.wifi||'不明'} ／ 駐車: ${s.parking||'不明'}</p>
           <div class="mt-auto pt-2">
+          <!-- 詳細ページの遷移
           <a href="/detail.html?id=${encodeURIComponent(s.id)}"
               class="inline-flex items-center gap-1 text-sm text-coffee-800 bg-white border border-coffee-200 hover:bg-cream-200/60 px-3 py-1.5 rounded-lg">
               詳細を見る
+          </a>
+          -->
+          <a href="${s.urls_pc}" target="_blank" rel="noopener"
+            class="inline-flex items-center gap-1 text-sm text-white bg-coffee-600 hover:bg-coffee-700 px-3 py-1.5 rounded-lg">
+              HotPepperで見る
           </a>
           </div>
         </div>`;
