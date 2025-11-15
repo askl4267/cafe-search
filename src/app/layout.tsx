@@ -3,13 +3,13 @@ import { M_PLUS_Rounded_1c, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 
 const mPlusRounded = M_PLUS_Rounded_1c({
-  subsets: ["latin", "japanese"],
+  subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "700"],
   variable: "--font-m-plus",
 });
 
 const shipporiMincho = Shippori_Mincho({
-  subsets: ["latin", "japanese"],
+  subsets: ["latin", "latin-ext"],
   weight: ["600", "700"],
   variable: "--font-shippori",
 });
