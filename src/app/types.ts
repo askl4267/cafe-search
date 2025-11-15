@@ -1,12 +1,18 @@
-export type MidArea = {
+export type AreaBase = {
+  code: string;
   name: string;
-  count: number;
+};
+
+export type MidArea = AreaBase;
+export type SmallArea = AreaBase;
+
+export type MidAreaDisplay = MidArea & {
+  count?: number;
   selected?: boolean;
 };
 
-export type SmallArea = {
-  name: string;
-  count: number;
+export type SmallAreaDisplay = SmallArea & {
+  count?: number;
   checked?: boolean;
 };
 
