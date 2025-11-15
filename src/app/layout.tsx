@@ -1,18 +1,5 @@
 import type { Metadata } from "next";
-import { M_PLUS_Rounded_1c, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
-
-const mPlusRounded = M_PLUS_Rounded_1c({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "700"],
-  variable: "--font-m-plus",
-});
-
-const shipporiMincho = Shippori_Mincho({
-  subsets: ["latin", "latin-ext"],
-  weight: ["600", "700"],
-  variable: "--font-shippori",
-});
 
 export const metadata: Metadata = {
   title: "OSAKA CAFE FINDER",
@@ -27,11 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body
-        className={`${mPlusRounded.variable} ${shipporiMincho.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

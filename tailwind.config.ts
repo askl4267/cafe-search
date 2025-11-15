@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-m-plus, "M PLUS Rounded 1c")', "system-ui", "sans-serif"],
-        display: ['var(--font-shippori, "Shippori Mincho")', "serif"],
+        sans: ['"M PLUS Rounded 1c"', "system-ui", "sans-serif"],
+        display: ['"Shippori Mincho"', "serif"],
       },
       colors: {
         coffee: {
