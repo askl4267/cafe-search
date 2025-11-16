@@ -17,6 +17,7 @@ export type SmallAreaDisplay = SmallArea & {
 };
 
 export type Cafe = {
+  id: string;
   name: string;
   description: string;
   address: string;
