@@ -18,7 +18,7 @@ export default function CafeCard({ cafe }: Props) {
   }, [router, cafe.id]);
 
   const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLArticleElement>) => {
+    (event: KeyboardEvent<HTMLElement>) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         handleOpenDetail();
