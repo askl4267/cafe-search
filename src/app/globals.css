@@ -21,8 +21,8 @@
   --color-leaf-500: #6aa680;
   --color-leaf-600: #5a8e6d;
 
-  --font-sans: '"M PLUS Rounded 1c"', system-ui, sans-serif;
-  --font-display: '"Shippori Mincho"', serif;
+  --font-sans: "M PLUS Rounded 1c", system-ui, sans-serif;
+  --font-display: "Shippori Mincho", serif;
 
   --shadow-card: 0 6px 22px rgba(70,53,42,.08), 0 1px 0 rgba(70,53,42,.06);
 }
