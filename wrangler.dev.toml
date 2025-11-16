@@ -1,11 +1,11 @@
 name = "cafe-search"
-main = ".open-next/cloudflare/worker.js"
+main = ".open-next/worker.js"
 type = "javascript"
 compatibility_date = "2025-11-16"
 # Enable `wrangler dev` so you can preview the OpenNext worker locally.
 workers_dev = true
 
-pages_build_output_dir = ".open-next/cloudflare"
+pages_build_output_dir = ".open-next"
 
 [build]
 command = "npm run build:cloudflare"
