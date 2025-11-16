@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 const API_BASE = "https://cafe-search-api.askl4267.workers.dev";
 const placeholderImage = "https://placehold.co/900x675?text=Osaka+Cafe+Finder";
 
@@ -95,9 +97,10 @@ const fetchShop = async (id: string) => {
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: { id?: string };
+  searchParams: { id?: string | string[] };
 }) {
-  const id = searchParams?.id;
+  const rawId = searchParams?.id;
+  const id = Array.isArray(rawId) ? rawId.find(Boolean) : rawId;
   if (!id) {
     return (
       <div className="min-h-screen bg-cream-100 text-coffee-900">
