@@ -1,4 +1,4 @@
-import worker from "./worker.bundle.js";
+import worker from "./.open-next/worker.js";
 
 export const config = {
   route: "/*",
