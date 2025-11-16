@@ -1,7 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-
-export const dynamic = "force-dynamic";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const API_BASE = "https://cafe-search-api.askl4267.workers.dev";
 const placeholderImage = "https://placehold.co/900x675?text=Osaka+Cafe+Finder";
@@ -79,10 +81,8 @@ const buildMapUrl = (shop: Shop) => {
   return `https://www.google.com/maps/search/${encodeURIComponent(name)}`;
 };
 
-const fetchShop = async (id: string) => {
-  const response = await fetch(`${API_BASE}/shop?id=${encodeURIComponent(id)}`, {
-    next: { revalidate: 60 },
-  });
+const fetchShopData = async (id: string) => {
+  const response = await fetch(`${API_BASE}/shop?id=${encodeURIComponent(id)}`);
   if (!response.ok) {
     const message = await response.text();
     throw new Error(message || "ショップ情報の取得に失敗しました");
@@ -94,13 +94,49 @@ const fetchShop = async (id: string) => {
   return payload.item;
 };
 
-export default async function ShopPage({
-  searchParams,
-}: {
-  searchParams: { id?: string | string[] };
-}) {
-  const rawId = searchParams?.id;
-  const id = Array.isArray(rawId) ? rawId.find(Boolean) : rawId;
+export default function ShopPage() {
+  const searchParams = useSearchParams();
+  const id = searchParams?.get("id") ?? undefined;
+  const [shop, setShop] = useState<Shop | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+    let isMounted = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setErrorMessage(null);
+    fetchShopData(id)
+      .then((item) => {
+        if (!isMounted) return;
+        setShop(item);
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setShop(null);
+        setErrorMessage(error instanceof Error ? error.message : "ショップ情報の取得に失敗しました");
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  const badgeList = useMemo(() => {
+    if (!shop) return [];
+    return [
+      shop.non_smoking ? `禁煙: ${shop.non_smoking}` : null,
+      shop.wifi ? `Wi-Fi: ${shop.wifi}` : null,
+      shop.parking ? `駐車場: ${shop.parking}` : null,
+    ].filter(Boolean) as string[];
+  }, [shop]);
+
+  const isLoading = !shop && !errorMessage;
+
   if (!id) {
     return (
       <div className="min-h-screen bg-cream-100 text-coffee-900">
@@ -109,7 +145,7 @@ export default async function ShopPage({
             カフェIDが指定されていません
           </p>
           <p className="mt-2 text-coffee-700">
-            トップページから店舗を選んで再度アクセスしてください。
+            トップページから店舗を選んで、もう一度お試しください。
           </p>
           <Link
             href="/"
@@ -122,14 +158,22 @@ export default async function ShopPage({
     );
   }
 
-  let shop: Shop | null = null;
-  let errorMessage: string | null = null;
-  try {
-    shop = await fetchShop(id);
-  } catch (error) {
-    console.error(error);
-    errorMessage =
-      error instanceof Error ? error.message : "ショップ情報の取得に失敗しました";
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <header className="sticky top-0 z-50 bg-cream-100/80 backdrop-blur border-b border-coffee-200">
+          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+            <Link href="/" className="text-sm text-coffee-700 hover:underline">
+              &larr; トップに戻る
+            </Link>
+            <div className="ml-auto text-xs text-coffee-500">Powered by Hot Pepper</div>
+          </div>
+        </header>
+        <main className="flex-grow max-w-5xl mx-auto px-4 py-16 text-center">
+          <p className="text-sm text-coffee-600">ショップ情報を読み込み中です…</p>
+        </main>
+      </div>
+    );
   }
 
   if (!shop) {
@@ -145,21 +189,13 @@ export default async function ShopPage({
         </header>
         <main className="flex-grow max-w-5xl mx-auto px-4 py-16">
           <div className="rounded-2xl border border-coffee-200 bg-cream-50/80 p-6 text-center">
-            <p className="text-lg font-semibold text-coffee-800">
-              ショップ情報が取得できません
-            </p>
-            <p className="text-coffee-700 mt-2">{errorMessage}</p>
+            <p className="text-lg font-semibold text-coffee-800">ショップ情報が取得できません</p>
+            <p className="text-coffee-700 mt-2">{errorMessage || "お手数ですが、時間をおいて再度お試しください。"}</p>
           </div>
         </main>
       </div>
     );
   }
-
-  const badgeList = [
-    shop.non_smoking ? `禁煙: ${shop.non_smoking}` : null,
-    shop.wifi ? `Wi-Fi: ${shop.wifi}` : null,
-    shop.parking ? `駐車場: ${shop.parking}` : null,
-  ].filter(Boolean) as string[];
 
   const heroImage = shop.photo_l || placeholderImage;
   const detailImage = shop.photo_l || placeholderImage;
@@ -196,7 +232,9 @@ export default async function ShopPage({
             <h1 className="font-display text-2xl sm:text-3xl text-coffee-800">
               {shop.name}
             </h1>
-            <p className="mt-1 text-coffee-700/90">{shop.catch_text || "ようこそ、大阪のカフェへ。"}</p>
+            <p className="mt-1 text-coffee-700/90">
+              {shop.catch_text || "ようこそ、大阪のカフェへ。"}
+            </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               {badgeList.length ? (
@@ -210,7 +248,7 @@ export default async function ShopPage({
                 ))
               ) : (
                 <span className="inline-flex items-center px-2 py-1 rounded-lg border border-coffee-200 bg-white text-xs text-coffee-800">
-                  設定項目がありません
+                  登録された設備情報がありません
                 </span>
               )}
             </div>
@@ -223,7 +261,7 @@ export default async function ShopPage({
                 rel="noreferrer"
                 className="text-sm text-coffee-700 underline"
               >
-                Googleマップで見る
+                Google マップで見る
               </a>
             </div>
 
@@ -234,7 +272,7 @@ export default async function ShopPage({
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-sm text-white bg-coffee-600 hover:bg-coffee-700 px-3 py-1.5 rounded-lg"
               >
-                HotPepperで詳細を見る
+                HotPepperで詳しく見る
               </a>
             </div>
           </div>
@@ -244,7 +282,7 @@ export default async function ShopPage({
           <article className="lg:col-span-2 bg-cream-50/70 border border-coffee-200 rounded-2xl p-4 sm:p-6 space-y-4">
             <div>
               <h2 className="text-base font-semibold text-coffee-800">店舗情報</h2>
-              <p className="text-sm text-coffee-600 mt-1">エリアや予算などを確認できます。</p>
+              <p className="text-sm text-coffee-600 mt-1">エリアや予算などを確認いただけます。</p>
             </div>
             <dl className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
               <dt className="text-coffee-600">ふりがな</dt>
@@ -285,7 +323,7 @@ export default async function ShopPage({
               />
             </div>
             <p className="text-xs text-coffee-600">
-              更新日: {formatUpdatedDate(shop.updated_at)}
+              最終更新日: {formatUpdatedDate(shop.updated_at)}
             </p>
           </aside>
         </section>
