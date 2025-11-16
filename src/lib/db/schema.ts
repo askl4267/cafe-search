@@ -1,0 +1,31 @@
+import { sqliteTable, text, real, integer } from "drizzle-orm/sqlite-core";
+
+export const shops = sqliteTable("shops", {
+  id: text("id").primaryKey(),
+  name: text("name"),
+  nameKana: text("name_kana"),
+  address: text("address"),
+  lat: real("lat"),
+  lng: real("lng"),
+  largeAreaCode: text("large_area_code"),
+  middleAreaCode: text("middle_area_code"),
+  smallAreaCode: text("small_area_code"),
+  genreCode: text("genre_code"),
+  budgetAvg: integer("budget_avg"),
+  capacity: integer("capacity"),
+  nonSmoking: text("non_smoking"),
+  wifi: text("wifi"),
+  parking: text("parking"),
+  openText: text("open_text"),
+  closeText: text("close_text"),
+  catchText: text("catch_text"),
+  urlsPc: text("urls_pc"),
+  photoL: text("photo_l"),
+  updatedAt: integer("updated_at"),
+  middleAreaName: text("middle_area_name"),
+  smallAreaName: text("small_area_name"),
+});
+
+export const schema = {
+  shops,
+};

@@ -12,7 +12,7 @@ import Header from "../components/Header";
 import FilterPanel from "../components/FilterPanel";
 import CafeGrid from "../components/CafeGrid";
 
-const API_BASE = "https://cafe-search-api.askl4267.workers.dev";
+const API_BASE = "/api";
 
 const placeholderImage = "https://placehold.co/600x450?text=Cafe";
 
