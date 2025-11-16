@@ -1,4 +1,4 @@
-import { sqliteTable, text, real, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 
 export const shops = sqliteTable("shops", {
   id: text("id").primaryKey(),
@@ -21,7 +21,7 @@ export const shops = sqliteTable("shops", {
   catchText: text("catch_text"),
   urlsPc: text("urls_pc"),
   photoL: text("photo_l"),
-  updatedAt: integer("updated_at"),
+  updatedAt: integer("updated_at").notNull(),
   middleAreaName: text("middle_area_name"),
   smallAreaName: text("small_area_name"),
 });
