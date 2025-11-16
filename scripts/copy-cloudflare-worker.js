@@ -13,7 +13,6 @@ const directoriesToCopy = [
 ];
 const destinationDir = join(projectRoot, "functions");
 const destinationOpenNext = join(destinationDir, ".open-next");
-const destinationWorker = join(destinationDir, "worker.bundle.js");
 
 if (!existsSync(workerSource)) {
   throw new Error(`OpenNext worker bundle not found at ${workerSource}`);
@@ -29,4 +28,5 @@ for (const subdir of directoriesToCopy) {
     cpSync(src, dst, { recursive: true });
   }
 }
+const destinationWorker = join(destinationOpenNext, "worker.js");
 copyFileSync(workerSource, destinationWorker);
