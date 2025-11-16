@@ -21,6 +21,8 @@
 # production
 /build
 
+functions/worker.bundle.js
+
 # misc
 .DS_Store
 *.pem

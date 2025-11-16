@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cloudflare": "open-next build --config open-next.config.mjs",
+    "build:cloudflare": "opennextjs-cloudflare build --config open-next.config.mjs",
     "postbuild:cloudflare": "node scripts/copy-cloudflare-worker.js",
     "dev:cloudflare": "wrangler dev --config wrangler.dev.toml",
     "deploy:cloudflare": "npm run build && npm run build:cloudflare && wrangler publish --config wrangler.dev.toml",
