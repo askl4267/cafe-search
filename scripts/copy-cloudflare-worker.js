@@ -1,4 +1,12 @@
-import { copyFileSync, existsSync, mkdirSync, rmSync, cpSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  rmSync,
+  cpSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 
 const projectRoot = process.cwd();
@@ -30,3 +38,31 @@ for (const subdir of directoriesToCopy) {
 }
 const destinationWorker = join(destinationOpenNext, "worker.js");
 copyFileSync(workerSource, destinationWorker);
+
+patchOpenNextFiles(destinationOpenNext);
+
+function patchOpenNextFiles(baseDir) {
+  const replacements = [
+    ["async await(", "async awaitAll("],
+    ["pendingPromiseRunner.await(", "pendingPromiseRunner.awaitAll("],
+  ];
+  const filesToPatch = [
+    join("middleware", "handler.mjs"),
+    join("server-functions", "default", "index.mjs"),
+    join("server-functions", "default", "handler.mjs"),
+  ];
+  for (const relativePath of filesToPatch) {
+    const filePath = join(baseDir, relativePath);
+    if (!existsSync(filePath)) {
+      continue;
+    }
+    let content = readFileSync(filePath, "utf8");
+    let next = content;
+    for (const [search, replacement] of replacements) {
+      next = next.split(search).join(replacement);
+    }
+    if (next !== content) {
+      writeFileSync(filePath, next, "utf8");
+    }
+  }
+}
