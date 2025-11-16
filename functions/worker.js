@@ -5,4 +5,9 @@ export const config = {
   runtime: "edge",
 };
 
-export default worker;
+export async function onRequest(context) {
+  const { request, env } = context;
+  return worker.fetch
+    ? worker.fetch(request, env, context)
+    : worker(request, env, context);
+}
