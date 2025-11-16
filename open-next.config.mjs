@@ -1,5 +1,5 @@
-import openNext from "@opennextjs/cloudflare/next";
+import { defineCloudflareConfig } from "@opennextjs/cloudflare/config";
 
-export default openNext({
+export default defineCloudflareConfig({
   rootDirectory: ".",
 });
