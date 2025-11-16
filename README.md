@@ -55,3 +55,5 @@ npm run deploy:cloudflare
 ```
 
 Use `npm run dev:cloudflare` to preview the worker locally via `wrangler dev`, and edit `open-next.config.mjs` if you need to customize how OpenNext processes the `src` directory or rewrites routes. The generated worker bundle lives in `.open-next/cloudflare/`, which is ignored via `.gitignore`.
+
+Cloudflare Pages deploys this project using the minimal `wrangler.toml` (Pages honors `pages_build_output_dir`, so it knows where the OpenNext bundle lives). For direct `wrangler dev` or manual `wrangler publish` workflows you can keep using `npm run dev:cloudflare`/`npm run deploy:cloudflare`, which target the supplementary `wrangler.dev.toml` (it sets `main`, `workers_dev`, and the build command so you get the same bundle locally). Fill in `account_id`/`route` there when you need to publish to your own zone.

@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "build:cloudflare": "open-next build --config open-next.config.mjs",
-    "dev:cloudflare": "wrangler dev --config wrangler.toml",
-    "deploy:cloudflare": "npm run build && npm run build:cloudflare && wrangler publish --config wrangler.toml",
+    "dev:cloudflare": "wrangler dev --config wrangler.dev.toml",
+    "deploy:cloudflare": "npm run build && npm run build:cloudflare && wrangler publish --config wrangler.dev.toml",
     "start": "next start",
     "lint": "eslint"
   },

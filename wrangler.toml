@@ -1,15 +1,3 @@
 name = "cafe-search"
-main = ".open-next/cloudflare/worker.js"
-type = "javascript"
 compatibility_date = "2025-11-16"
-# Keep Workers Dev on so `wrangler dev` works locally before Pages publish.
-workers_dev = true
-
-# Cloudflare Pages builds should point to OpenNext's output directory.
 pages_build_output_dir = ".open-next/cloudflare"
-
-[build]
-command = "npm run build:cloudflare"
-
-[vars]
-NODE_ENV = "production"
