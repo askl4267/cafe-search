@@ -105,21 +105,16 @@ export default function ShopPage() {
       return;
     }
     let isMounted = true;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setErrorMessage(null);
     fetchShopData(id)
       .then((item) => {
         if (!isMounted) return;
+        setErrorMessage(null);
         setShop(item);
       })
       .catch((error) => {
         if (!isMounted) return;
         setShop(null);
         setErrorMessage(error instanceof Error ? error.message : "ショップ情報の取得に失敗しました");
-      })
-      .finally(() => {
-        if (!isMounted) return;
-        setLoading(false);
       });
     return () => {
       isMounted = false;
