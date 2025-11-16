@@ -1,6 +1,32 @@
 @import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700&family=Shippori+Mincho:wght@600;700&display=swap");
 @import "tailwindcss";
 
+@theme {
+  --color-coffee-50: #fbf6f2;
+  --color-coffee-100: #f4ebe4;
+  --color-coffee-200: #e7d8c6;
+  --color-coffee-300: #d7c1a5;
+  --color-coffee-400: #c5a37d;
+  --color-coffee-500: #a77f57;
+  --color-coffee-600: #8b6647;
+  --color-coffee-700: #6f523a;
+  --color-coffee-800: #584231;
+  --color-coffee-900: #46352a;
+
+  --color-cream-50: #fffdfa;
+  --color-cream-100: #fff8ee;
+  --color-cream-200: #fff1db;
+
+  --color-leaf-400: #7bb08f;
+  --color-leaf-500: #6aa680;
+  --color-leaf-600: #5a8e6d;
+
+  --font-sans: "M PLUS Rounded 1c", system-ui, sans-serif;
+  --font-display: "Shippori Mincho", serif;
+
+  --shadow-card: 0 6px 22px rgba(70,53,42,.08), 0 1px 0 rgba(70,53,42,.06);
+}
+
 :root {
   --background: #fff8ee;
   --foreground: #3f2412;
