@@ -47,6 +47,7 @@ const mapToCafe = (item: JsonRecord): Cafe => {
   const photoPc = photoRecord ? asRecord(photoRecord["pc"]) : undefined;
   const nestedImage = photoPc ? toStringValue(photoPc["l"]) : "";
   return {
+    id: toStringValue(record["id"], ""),
     name: toStringValue(record["name"], "Unnamed Cafe"),
     description: toStringValue(record["catch"] ?? record["description"]),
     address: toStringValue(record["address"]),
