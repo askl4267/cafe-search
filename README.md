@@ -34,3 +34,24 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Deploy on Cloudflare Workers (SSR)
+
+This project is now wrapped with [OpenNext](https://github.com/cloudflare/open-next) so it can run as a Server-Side Rendered Cloudflare Worker.
+
+1. Set up your Cloudflare credentials by running `wrangler login` and filling in `account_id` (or the `route`/`zone_id` you plan to target) inside `wrangler.toml`.
+2. Install dependencies (including `@opennextjs/cloudflare` and `wrangler`) with `npm install`.
+3. Build the Next.js app and package it for Workers:
+
+```bash
+npm run build
+npm run build:cloudflare
+```
+
+4. Publish the worker:
+
+```bash
+npm run deploy:cloudflare
+```
+
+Use `npm run dev:cloudflare` to preview the worker locally via `wrangler dev`, and edit `open-next.config.mjs` if you need to customize how OpenNext processes the `src` directory or rewrites routes. The generated worker bundle lives in `.open-next/cloudflare/`, which is ignored via `.gitignore`.

@@ -1,0 +1,14 @@
+name = "cafe-search"
+main = ".open-next/cloudflare/worker.js"
+type = "javascript"
+compatibility_date = "2025-11-16"
+workers_dev = true
+
+# Provide your Cloudflare account if you deploy to a custom zone.
+account_id = ""
+
+[build]
+command = "npm run build:cloudflare"
+
+[vars]
+NODE_ENV = "production"
