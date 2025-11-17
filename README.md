@@ -1,36 +1,277 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OSAKA CAFE FINDER（cafe-search）
 
-## Getting Started
+サービスURL：https://cafe-search.pages.dev/
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 大阪の「ちょうどいいカフェ」を、エリアと雰囲気から見つけられるカフェ検索アプリ
+
+OSAKA CAFE FINDER は、  
+**「コーヒー重視」「スイーツ重視」「ゆっくりしたい」** といった “気分” に合った大阪のカフェを見つけられるようにすることを目的とした Web アプリです。
+
+- 中エリア（梅田 / 京橋・天満・天六・南森町 など）で絞り込み  
+- 小エリア（お初天神 / 西天満 / 茶屋町・中崎町・中津）で絞り込み  
+- 設備（禁煙 / 駐車場 など）で条件検索  
+- 将来的には「雰囲気スコア」や「類似カフェレコメンド」による並び替え機能も実装予定
+
+バックエンドには **Cloudflare Workers \+ D1**、  
+フロントエンドには **Next.js（App Router） \+ TypeScript \+ Tailwind CSS** を採用しています。
+
+---
+
+## 目次
+
+- [開発背景](#開発背景)  
+- [主要機能](#主要機能)  
+- [使用技術](#使用技術)  
+- [技術選定の理由](#技術選定の理由)  
+- [画面](#画面)  
+- [開発ルール](#開発ルール)  
+- [今後の開発について](#今後の開発について)
+
+---
+
+## 開発背景
+
+私は現在、ECサイトや求人サイトなど向けにレコメンドエンジンを提供する会社で、カスタマーサクセスとして、ログデータの分析やレコメンドロジックの AB テスト・改善提案に日々関わっています。
+
+業務では「データをどう扱うか」「どうレコメンドに落とし込むか」に強い関心を持つ一方で、自分でゼロからプロダクトを設計・実装し、ユーザーに届く形にしたいという思いが強くなりました。
+
+その題材として選んだのが **「カフェ検索」** です。
+
+- 家族でのカフェ巡りが好きなこと  
+- 既存のグルメサイトやGoogle Mapsは情報量は多い一方で、  
+  「**雰囲気や利用シーンにフォーカスした検索**」がしづらいと感じていたこと
+
+これらから、
+
+「**場所 × 雰囲気 × 目的** で、自分に合うカフェを見つけられるサービスを作りたい」
+
+と考え、このプロジェクトをスタートしました。
+
+- **目的**：ユーザーが雰囲気や利用シーンに合った検索体験ができるサービスの開発  
+- **課題感**：店舗情報だけでは、雰囲気や利用シーンを識別する特徴が少なく、ユーザーの「気分」（コーヒー重視 / スイーツ重視 / ゆっくり 等）に沿った発見体験が弱い。  
+- **アプローチ**：  
+  - Hot PepperのグルメサーチAPIを使用し、表示する店舗情報を取得。  
+  - Google Places APIを使用し、レビュー情報などの店舗の雰囲気や利用シーンが推定できるデータを取得。  
+  - 上記の公開APIから取得データをAIモデルを構築・解析し、店舗の雰囲気や利用シーンに沿った並び替え、レコメンド機能を実装する。  
+  - Workers で**低レイテンシな API**を提供し、Cloudflare Pages で**グローバル配信**。  
+  - シンプルなフロントで**初期描画を高速化**しつつ、UI を段階的に拡張。
+
+---
+
+## 主要機能
+
+### エリア × 条件でのカフェ検索
+
+- 大阪エリア（中エリア / 小エリア）での絞り込み  
+- 禁煙 / 駐車場の有無など、設備ベースのフィルタ
+
+データはホットペッパーグルメ API から取得し、  
+一度 Cloudflare D1（SQLite）に保存してから検索を行う構成にしています。
+
+これにより、
+
+- 外部 API への依存を減らしつつ、  
+- 独自のスコアリング・検索ロジックを実装できる余地
+
+を持たせています。
+
+---
+
+### カフェ詳細ページ
+
+- 住所・営業時間・定休日などの基本情報  
+- 席数・予算帯・設備（Wi-Fi / 禁煙 / 駐車場）など、利用シーン判断に役立つ情報  
+- 今後、Google Places API から取得したレビュー情報などをもとに、レコメンド枠を設定予定
+
+---
+
+### 気分ベースの並び替え（開発中）
+
+ユーザーが次のような「気分」を選ぶことで、検索結果の並び順を変える仕組みを開発中です。
+
+- コーヒー重視  
+- スイーツ重視  
+- 長居・会話向き　など
+
+
+ホットペッパーのジャンル情報や予算、席数、設備、レビュー情報のテキストから抽出した特徴量を組み合わせて、
+
+- ルールベース  
+- 簡易スコアリング
+
+によるランキングを行う設計にしています。
+
+---
+
+### 類似カフェレコメンド（開発中）
+
+詳細ページでは、現在閲覧しているカフェと似た雰囲気のカフェをおすすめする機能を実装予定です。
+
+類似度の算出には、以下のような特徴量を想定しています。
+
+- 立地（エリア）  
+- 予算帯  
+- 席数・設備  
+- レビューから抽出したキーワード（コーヒー / ケーキ / 静か / おしゃれ など）
+
+業務で扱っているコンテンツベースレコメンドの考え方を、シンプルな形でサービスにも落とし込むことを狙っています。
+
+---
+
+## 使用技術
+
+| カテゴリ | 技術 |
+| :---- | :---- |
+| フロントエンド | Next.js（App Router） / React / TypeScript / Tailwind CSS |
+| バックエンド | Cloudflare Workers / Cloudflare Pages Functions（Node.js） |
+| データベース | Cloudflare D1（SQLite） |
+| データ取得 | ホットペッパーグルメ API / Google Places API |
+| インフラ | Cloudflare Pages / Cloudflare D1 / Cloudflare Workers |
+
+---
+
+## 技術選定の理由
+
+### フロントエンド（Next.js / React / TypeScript / Tailwind CSS）
+
+**Next.js（App Router）**
+
+- SSR / SSG / ISR を柔軟に選択できる一方で、今回は「動的だが、SSR に依存しすぎない」構成を意識して実装しています。  
+- Route Handlers によって API を同一プロジェクト内に置けるため、小規模な個人開発でも運用しやすいと判断しました。
+
+**React**
+
+- 検索条件・検索結果・詳細モーダルなど、状態管理が多い UI をコンポーネントとして整理しやすく、画面追加や改修時の影響範囲が追いやすい点を重視しました。
+
+**TypeScript**
+
+- ホットペッパー API から取得したデータを D1 に取り込む際、型定義によって「データ構造のズレ」を早期に検知できるようにしています。  
+- Drizzle ORMを導入し、データモデルと TypeScript の型を揃えて管理しています。
+
+**Tailwind CSS**
+
+- デザインにかける時間を抑えつつ、「カフェらしい落ち着いた色合い」を表現するために採用しました。  
+- ユーティリティクラスで素早く UI を試行錯誤できる点を評価しています。
+
+---
+
+### バックエンド / インフラ（Cloudflare Workers / D1 / Pages）
+
+個人開発であっても、できるだけ本番運用に近い構成 を意識したかったため、Cloudflare のサーバーレススタックを採用しました。
+
+**Cloudflare Workers / Pages Functions**
+
+- リクエスト数が少ないうちは無料枠で運用でき、将来トラフィックが増えてもスケールしやすい構成です。  
+- `/api/search` / `/api/shop` / `/api/areas` など、API ごとのハンドラをファイル単位で分割しやすいため、責務を意識したコードにしやすい点を重視しました。
+
+**Cloudflare D1（SQLite）**
+
+- SQLite ベースのマネージドDBのため、個人開発でもSQLを活かしたデータ設計が出来る一方で運用負荷が小さい点を評価しました。  
+- 将来的にPostgreSQLなどのRDBに移行する場合でも、テーブル設計やクエリの考え方をそのまま活かせるよう、可能な限りシンプルなスキーマ構成を意識しています。
+
+---
+
+### データソース（ホットペッパー API / Google Places API）
+
+**ホットペッパーグルメ API**
+
+- 国内のカフェ情報が豊富であり、エリア・ジャンル・予算・設備といった  
+  「検索条件に活かしやすい構造化データ」が揃っているため採用しました。
+
+**Google Places API**
+
+- レビューといった感性的な情報を補完するために利用しました。
+
+---
+
+## インフラ構成
+
+構成は以下の通りです。
+
+- Cloudflare Pages  
+  → Next.js アプリをホスティング  
+- Cloudflare Pages Functions / Workers  
+  → `/api/*` エンドポイント（検索・詳細・エリア情報）を担当  
+- Cloudflare D1  
+  → `shops` やエリア情報など、カフェ情報の永続化  
+- 外部 API  
+  → ホットペッパーグルメ API / Google Places API からデータを取得し、D1 に取り込み
+
+---
+
+## データテーブル
+
+### 店舗情報に関するテーブル
+
+- `shops`  
+    
+  - ホットペッパー API から取得したカフェの基本情報を保存
+
+### 外部サービス連携に関するテーブル
+
+- `places_link`  
+  - `shops` と Google Places の `place_id` を紐づけるテーブル  
+- `place_details` / `place_reviews`  
+  - 写真・レビュー・スコアなど、Google Places 由来の情報を保存
+
+将来的な分析やレコメンドを見据え、原データ（API レスポンス）をそのまま持つのではなく、プロダクトで使いやすい形に正規化することを意識して設計しています。
+
+---
+
+## こだわった実装
+
+### UI / UX：紙のような質感とカフェらしい世界観
+
+- 全体の背景にノイズテクスチャと淡いグラデーションを重ねることで、「紙のような質感」を CSS のみで表現しています。  
+- タイトル用フォントと本文用フォントを使い分け、「メニュー表のような見出し」と「読みやすい本文」の両立を意識しました。  
+- Tailwind CSS のユーティリティクラスを使いながら、クラスが肥大化しやすい部分はコンポーネント化して、見た目と構造のバランスがとれるようにリファクタリングしています。
+
+---
+
+### 検索 API とクエリ設計
+
+Cloudflare Workers 側では、機能ごとにモジュールを分割したシンプルなルーター構成にしています。
+
+```
+// 例) src/api/handlers/search.ts
+
+export async function handleSearch(req: Request, db: D1Database) {
+
+  const url \= new URL(req.url);
+
+  const params \= buildSearchParams(url.searchParams);
+
+  const cafes \= await searchShops(db, params);
+
+  return new Response(JSON.stringify({ cafes }), {
+
+    headers: { "content-type": "application/json" },
+
+  });
+
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- 検索条件の組み立ては buildSearchParams に切り出し、新しい条件を追加しやすい形 にしています。  
+- 実際の SQL 実行部分も別モジュールに分離し、「HTTP レイヤ」と「データアクセスレイヤ」を分けることで、将来的に別DB への移行がしやすい構造を意識しています。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### データモデリングと分析を見据えた設計
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- ホットペッパーのレスポンスをそのまま使うのではなく、エリア情報・ジャンル・設備などを個別カラムとして保持し、後から SQL で柔軟に集計・分析できるようにしています。  
+- 「気分ベースのスコアリング」「類似度計算」「クラスタリング」など、今後の機能を見据えて、特徴量を別テーブルやビューで持てる構造を前提に設計しています。
 
-## Learn More
+### レコメンド／スコアリング（構想中）
 
-To learn more about Next.js, take a look at the following resources:
+ユーザーの「気分」プリセットをパラメータ化し、各ショップに対して「静かさ」「おしゃれ度」「作業向き度」などのスコアを付与する構成を検討しています。  
+初期はルールベースで実装し、将来的には アクセスログやユーザーの行動ログ（クリックやお気に入り）を元にした学習 に発展させられるよう、API のレスポンス形式も拡張しやすい形にしています。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 今後の開発予定
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 気分ベースの並び替え機能の実装  
+- 類似カフェのレコメンド（コンテンツベース）  
+- ER 図 / インフラ構成図 / 画面遷移図の整備  
+- テストコードの追加（API レイヤ・検索ロジック）
