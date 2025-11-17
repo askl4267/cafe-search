@@ -235,16 +235,19 @@ OSAKA CAFE FINDER は、
 ### 検索 API とクエリ設計
 
 Cloudflare Workers側では、機能ごとにモジュールを分割したシンプルなルーター構成にしています。
-api/src/worker.js – CORS 対応とルーティング振り分けを行うエントリーポイント（fetch ハンドラ）
+
+```text
+api/src/worker.js       – CORS 対応とルーティング振り分けを行うエントリーポイント（fetch ハンドラ）
 ├─ api/src/db/client.js – getDb が Drizzle/D1 のコネクションを作成し、スキーマをエクスポートするモジュール
 ├─ api/src/utils/response.js – CORS ヘッダーと、統一されたレスポンス用の json() ヘルパーを提供するモジュール
-├─ api/src/utils/filters.js – 複数のハンドラで使い回すフィルタ条件の組み立て／結合ロジックをまとめたモジュール
+├─ api/src/utils/filters.js  – 複数のハンドラで使い回すフィルタ条件の組み立て／結合ロジックをまとめたモジュール
 └─ api/src/handlers/
-　　├─ search.js – GET /search: エリア・駐車場・禁煙などの条件で店舗を絞り込み、ページネーション付きで返す
-　　├─ shop.js – GET /shop: id を指定して単一店舗の詳細情報を返す
-　　├─ areas.js – GET /areas: 利用可能な中エリア・小エリアのコードと名称一覧を返す
-　　├─ areaCounts.js – GET /area_counts: 設備フィルタを考慮したエリアごとの店舗件数を集計して返す
-　　└─ areasTree.js – GET /areas_tree: 設備フィルタ適用後の店舗数を含む、二階層のエリアツリーを返す
+   ├─ search.js      – GET /search: エリア・駐車場・禁煙などの条件で店舗を絞り込み、ページネーション付きで返す
+   ├─ shop.js        – GET /shop: id を指定して単一店舗の詳細情報を返す
+   ├─ areas.js       – GET /areas: 利用可能な中エリア・小エリアのコードと名称一覧を返す
+   ├─ areaCounts.js  – GET /area_counts: 設備フィルタを考慮したエリアごとの店舗件数を集計して返す
+   └─ areasTree.js   – GET /areas_tree: 設備フィルタ適用後の店舗数を含む、二階層のエリアツリーを返す
+```
 
 ### データモデリングと分析を見据えた設計
 
