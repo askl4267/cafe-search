@@ -234,7 +234,8 @@ OSAKA CAFE FINDER は、
 
 Cloudflare Workers 側では、機能ごとにモジュールを分割したシンプルなルーター構成にしています。
 
-// （簡略化したイメージ）src/api/handlers/search.ts
+```
+// 例) src/api/handlers/search.ts
 
 export async function handleSearch(req: Request, db: D1Database) {
 
@@ -251,6 +252,7 @@ export async function handleSearch(req: Request, db: D1Database) {
   });
 
 }
+```
 
 - 検索条件の組み立ては buildSearchParams に切り出し、新しい条件を追加しやすい形 にしています。  
 - 実際の SQL 実行部分も別モジュールに分離し、「HTTP レイヤ」と「データアクセスレイヤ」を分けることで、将来的に別DB への移行がしやすい構造を意識しています。
@@ -260,7 +262,7 @@ export async function handleSearch(req: Request, db: D1Database) {
 - ホットペッパーのレスポンスをそのまま使うのではなく、エリア情報・ジャンル・設備などを個別カラムとして保持し、後から SQL で柔軟に集計・分析できるようにしています。  
 - 「気分ベースのスコアリング」「類似度計算」「クラスタリング」など、今後の機能を見据えて、特徴量を別テーブルやビューで持てる構造を前提に設計しています。
 
-🧪 レコメンド／スコアリング（構想中）
+### レコメンド／スコアリング（構想中）
 
 ユーザーの「気分」プリセットをパラメータ化し、各ショップに対して「静かさ」「おしゃれ度」「作業向き度」などのスコアを付与する構成を検討しています。  
 初期はルールベースで実装し、将来的には アクセスログやユーザーの行動ログ（クリックやお気に入り）を元にした学習 に発展させられるよう、API のレスポンス形式も拡張しやすい形にしています。
