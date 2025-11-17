@@ -140,8 +140,8 @@ OSAKA CAFE FINDER は、
 
 **Next.js（App Router）**
 
-- SSR / SSG / ISR を柔軟に選択できる一方で、今回は「動的だが、SSR に依存しすぎない」構成を意識して実装しています。  
-- Route Handlers によって API を同一プロジェクト内に置けるため、小規模な個人開発でも運用しやすいと判断しました。
+- Next.jsはReactのフレームワークとして、将来の拡張性があるため採用しました。  
+- App Routerを使用した理由として、ヘッダーやフッターを共通化しつつ、ページごとにファイルを分けた構成にしやすいと考え採用しました。
 
 **React**
 
@@ -149,7 +149,7 @@ OSAKA CAFE FINDER は、
 
 **TypeScript**
 
-- ホットペッパー API から取得したデータを D1 に取り込む際、型定義によって「データ構造のズレ」を早期に検知できるようにしています。  
+- 型定義を導入して、関数やデータベースの構造を明確化し、バグを減らすことを目的に採用しました。
 - Drizzle ORMを導入し、データモデルと TypeScript の型を揃えて管理しています。
 
 **Tailwind CSS**
@@ -237,16 +237,19 @@ OSAKA CAFE FINDER は、
 Cloudflare Workers側では、機能ごとにモジュールを分割したシンプルなルーター構成にしています。
 
 ```text
-api/src/worker.js       – CORS対応とルーティング振り分けを行うエントリーポイント（fetchハンドラ）
-├─ api/src/db/client.js – getDbがDrizzle/D1のコネクションを作成し、スキーマをエクスポートするモジュール
-├─ api/src/utils/response.js – CORSヘッダーと、統一されたレスポンス用の json() ヘルパーを提供するモジュール
-├─ api/src/utils/filters.js  – 複数のハンドラで使い回すフィルタ条件の組み立て／結合ロジックをまとめたモジュール
-└─ api/src/handlers/
+api/src/
+├─ worker.js      – CORS対応とルーティング振り分けを行うエントリーポイント（fetchハンドラ）
+├─ db/
+|  └─ client.js   – Drizzle/D1のコネクションを作成、スキーマをエクスポート
+├─ utils/
+|  ├─ response.js – レスポンス用の共用コード
+|  └─ filters.js  – フィルタ条件の組み立て／結合ロジックを集約
+└─ handlers/
    ├─ search.js      – GET /search: エリア・駐車場・禁煙などの条件で店舗を絞り込み、ページネーション付きで返す
    ├─ shop.js        – GET /shop: idを指定して単一店舗の詳細情報を返す
    ├─ areas.js       – GET /areas: 利用可能な中エリア・小エリアのコードと名称一覧を返す
-   ├─ areaCounts.js  – GET /area_counts: 設備フィルタを考慮したエリアごとの店舗件数を集計して返す
-   └─ areasTree.js   – GET /areas_tree: 設備フィルタ適用後の店舗数を含む、二階層のエリアツリーを返す
+   ├─ areaCounts.js  – GET /area_counts: フィルタを考慮したエリアごとの店舗件数を集計して返す
+   └─ areasTree.js   – GET /areas_tree: フィルタ適用後の店舗数を含む、二階層のエリアツリーを返す
 ```
 
 ### データモデリングと分析を見据えた設計
