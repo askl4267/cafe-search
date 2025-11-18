@@ -5,6 +5,7 @@ import { handleShop } from "./handlers/shop";
 import { handleAreas } from "./handlers/areas";
 import { handleAreaCounts } from "./handlers/areaCounts";
 import { handleAreasTree } from "./handlers/areasTree";
+import { handleRecommend } from "./handlers/recommend";
 
 /**
  * API エントリポイント。
@@ -53,10 +54,16 @@ export default {
       return handleAreasTree(req, env, db);
     }
 
+    // ★ GET /recommend
+    // 中エリア単位で候補を絞り、ロジックに応じてレコメンド店舗を返す。
+    if (url.pathname === "/recommend" && req.method === "GET") {
+      return handleRecommend(req, env, db);
+    }
+
     // 未定義パスへのフォールバック応答。
     // 監視や疎通確認用に 200 を返しつつ、利用可能な代表エンドポイントを案内する。
     return new Response(
-      "OK (try GET /search, /areas, /area_counts, or /areas_tree)",
+      "OK (try GET /search, /shop, /areas, /area_counts, /areas_tree, or /recommend)",
       { status: 200, headers: CORS },
     );
   },

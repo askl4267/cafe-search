@@ -5,8 +5,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
+import CafeCard from "../../components/CafeCard";
+import type { Cafe } from "../types";
+
 const API_BASE = "https://cafe-search-api.askl4267.workers.dev";
 const placeholderImage = "https://placehold.co/900x675?text=Osaka+Cafe+Finder";
+const cardPlaceholderImage = "https://placehold.co/600x450?text=Cafe";
+const RECOMMEND_ITEM_COUNT = 6;
 
 type Shop = {
   id: string;
@@ -81,6 +86,17 @@ const buildMapUrl = (shop: Shop) => {
   return `https://www.google.com/maps/search/${encodeURIComponent(name)}`;
 };
 
+const mapShopToCafeCard = (shop: Shop): Cafe => ({
+  id: shop.id,
+  name: formatText(shop.name, "Unnamed Cafe"),
+  description: formatText(shop.catch_text, "HotPepperで詳しく見る"),
+  address: formatText(shop.address, "住所情報なし"),
+  parking: formatText(shop.parking, "不明"),
+  wifi: formatText(shop.wifi, "不明"),
+  nonSmoking: formatText(shop.non_smoking, "不明"),
+  image: shop.photo_l || cardPlaceholderImage,
+});
+
 const fetchShopData = async (id: string) => {
   const response = await fetch(`${API_BASE}/shop?id=${encodeURIComponent(id)}`);
   if (!response.ok) {
@@ -99,6 +115,9 @@ export default function ShopContent() {
   const id = searchParams?.get("id") ?? undefined;
   const [shop, setShop] = useState<Shop | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [recommendations, setRecommendations] = useState<Cafe[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -128,6 +147,57 @@ export default function ShopContent() {
       shop.wifi ? `Wi-Fi: ${shop.wifi}` : null,
       shop.parking ? `駐車場: ${shop.parking}` : null,
     ].filter(Boolean) as string[];
+  }, [shop]);
+
+  useEffect(() => {
+    const areaCode = shop?.middle_area_code;
+    if (!areaCode) {
+      setRecommendations([]);
+      setRecommendationsError(null);
+      setRecommendationsLoading(false);
+      return;
+    }
+
+    let active = true;
+
+    const fetchRecommendations = async () => {
+      setRecommendationsLoading(true);
+      setRecommendationsError(null);
+      try {
+        const params = new URLSearchParams({
+          area: areaCode,
+          logic: "random",
+          num: String(RECOMMEND_ITEM_COUNT),
+        });
+        if (shop.id) {
+          params.set("exclude_id", shop.id);
+        }
+        const response = await fetch(`${API_BASE}/recommend?${params.toString()}`);
+        if (!response.ok) {
+          const message = await response.text();
+          throw new Error(message || "レコメンド情報の取得に失敗しました");
+        }
+        const data = (await response.json()) as { items?: Shop[] };
+        const items = Array.isArray(data.items) ? data.items : [];
+        if (!active) return;
+        setRecommendations(items.map(mapShopToCafeCard));
+      } catch (error) {
+        if (!active) return;
+        setRecommendations([]);
+        setRecommendationsError(
+          error instanceof Error ? error.message : "レコメンド情報の取得に失敗しました",
+        );
+      } finally {
+        if (!active) return;
+        setRecommendationsLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+
+    return () => {
+      active = false;
+    };
   }, [shop]);
 
   if (!id) {
@@ -321,6 +391,40 @@ export default function ShopContent() {
               最終更新日: {formatUpdatedDate(shop.updated_at)}
             </p>
           </aside>
+        </section>
+
+        <section className="bg-cream-50/70 border border-coffee-200 rounded-2xl p-4 sm:p-6 space-y-4">
+          <div>
+            <h2 className="text-base font-semibold text-coffee-800">
+              このエリアのおすすめ
+            </h2>
+          </div>
+
+          {recommendationsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: RECOMMEND_ITEM_COUNT }, (_, index) => (
+                <div
+                  key={`rec-skel-${index}`}
+                  className="skeleton h-[280px] rounded-2xl"
+                />
+              ))}
+            </div>
+          ) : recommendations.length ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recommendations.map((cafe) => (
+                <CafeCard key={cafe.id} cafe={cafe} />
+              ))}
+            </div>
+          ) : (
+            <p
+              className={`text-sm ${
+                recommendationsError ? "text-red-600" : "text-coffee-600"
+              }`}
+            >
+              {recommendationsError ??
+                "現在、このエリア内でおすすめとして表示できるカフェがありません。"}
+            </p>
+          )}
         </section>
       </main>
     </div>
