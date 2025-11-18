@@ -2,7 +2,7 @@
 
 サービスURL：https://cafe-search.pages.dev/
 
-![TOP](/tmp/docs/screens/top.png)
+![TOP](/public/top.png)
 
 ---
 
@@ -143,7 +143,7 @@ OSAKA CAFE FINDER は、
 
 **React**
 
-- 検索条件・検索結果・詳細モーダルなど、状態管理が多い UI をコンポーネントとして整理しやすく、画面追加や改修時の影響範囲が追いやすい点を重視しました。
+- 検索条件・検索結果など、状態管理が多い UI をコンポーネントとして整理しやすく、画面追加や改修時の影響範囲が追いやすい点を重視しました。
 
 **TypeScript**
 
