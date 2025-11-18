@@ -6,9 +6,6 @@ export default function Header() {
           <div className="w-9 h-9 rounded-xl bg-coffee-600" />
           <div className="font-display text-2xl tracking-wide">Osaka Cafe Finder</div>
         </div>
-        <div className="ml-4 text-sm text-coffee-600 hidden md:block">
-          いまのおすすめ 42 件
-        </div>
         <div className="ml-auto text-xs text-coffee-500">Powered by Hot Pepper</div>
       </div>
     </header>
