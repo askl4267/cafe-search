@@ -398,11 +398,6 @@ export default function ShopContent() {
             <h2 className="text-base font-semibold text-coffee-800">
               このエリアのおすすめ
             </h2>
-            <p className="text-sm text-coffee-600 mt-1">
-              {shop.middle_area_name
-                ? `${shop.middle_area_name}のカフェをランダムにピックアップしています。`
-                : "周辺エリアのカフェをランダムにピックアップしています。"}
-            </p>
           </div>
 
           {recommendationsLoading ? (
