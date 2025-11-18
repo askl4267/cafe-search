@@ -150,7 +150,8 @@ export default function ShopContent() {
   }, [shop]);
 
   useEffect(() => {
-    if (!shop?.middle_area_code) {
+    const areaCode = shop?.middle_area_code;
+    if (!areaCode) {
       setRecommendations([]);
       setRecommendationsError(null);
       setRecommendationsLoading(false);
@@ -164,7 +165,7 @@ export default function ShopContent() {
       setRecommendationsError(null);
       try {
         const params = new URLSearchParams({
-          area: shop.middle_area_code,
+          area: areaCode,
           logic: "random",
           num: String(RECOMMEND_ITEM_COUNT),
         });
