@@ -44,12 +44,14 @@ type ShopResponse = {
   error?: string;
 };
 
+// APIがnullや空文字を返すケースが多いため、表示用に必ず文字列へ正規化する
 const formatText = (value: string | number | null | undefined, fallback = "未設定") => {
   if (value === undefined || value === null) return fallback;
   const str = String(value).trim();
   return str ? str : fallback;
 };
 
+// 予算や収容人数は数値/文字列が混在するためここでロケールに合わせて整形
 const formatBudget = (value: number | string | null | undefined) => {
   if (value === undefined || value === null) return "未設定";
   const num = Number(value);
@@ -76,6 +78,7 @@ const formatUpdatedDate = (value: number | string | null | undefined) => {
 };
 
 const buildMapUrl = (shop: Shop) => {
+  // 緯度経度があれば最優先で使用し、無い場合は店名検索へフォールバックする
   if (shop.lat != null && shop.lng != null) {
     return `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`;
   }
@@ -124,6 +127,7 @@ export default function ShopContent() {
       return;
     }
     let isMounted = true;
+    // 初回表示時に店舗詳細を取得し、アンマウント時はstate更新を抑止する
     fetchShopData(id)
       .then((item) => {
         if (!isMounted) return;

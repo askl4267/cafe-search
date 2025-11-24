@@ -24,6 +24,7 @@ export default function CafeGrid({
   const skeletonItems = Array.from({ length: 6 }, (_, index) => (
     <div key={`skeleton-${index}`} className="skeleton h-[220px] rounded-2xl" />
   ));
+  const hasCafes = cafes.length > 0;
 
   return (
     <section className="max-w-7xl mx-auto px-4 mt-6 space-y-4">
@@ -33,15 +34,15 @@ export default function CafeGrid({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="cards">
-        {loading
-          ? skeletonItems
-          : cafes.length
-          ? cafes.map((cafe) => <CafeCard key={cafe.name} cafe={cafe} />)
-          : (
-            <div className="col-span-full text-center text-sm text-coffee-600">
-              条件に合うカフェが見つかりませんでした。
-            </div>
-          )}
+        {loading && skeletonItems}
+        {!loading &&
+          hasCafes &&
+          cafes.map((cafe) => <CafeCard key={cafe.id || cafe.name} cafe={cafe} />)}
+        {!loading && !hasCafes && (
+          <div className="col-span-full text-center text-sm text-coffee-600">
+            条件に合うカフェが見つかりませんでした。
+          </div>
+        )}
       </div>
 
       <Pagination

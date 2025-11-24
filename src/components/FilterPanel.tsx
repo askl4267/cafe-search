@@ -56,34 +56,36 @@ export default function FilterPanel({
               ))}
             </div>
 
-            <div className={showSmallPanel ? "space-y-3" : "space-y-3 hidden"}>
-              <div className="text-sm text-coffee-700 font-semibold">小エリア</div>
-              {smallAreas.length ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {smallAreas.map((area) => (
-                    <label
-                      key={area.code}
-                      className="flex items-center gap-2 rounded-xl border border-cream-300 bg-white px-3 py-2"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={area.checked}
-                        onChange={(event) => onToggleSmallArea(area.code, event.target.checked)}
-                        className="rounded"
-                      />
-                      <span className="text-sm text-coffee-800">
-                        {area.name}
-                        {area.count ? `（${area.count}）` : ""}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-coffee-600">
-                  選択中の条件に合う小エリアはありません。
-                </p>
-              )}
-            </div>
+            {showSmallPanel && (
+              <div className="space-y-3">
+                <div className="text-sm text-coffee-700 font-semibold">小エリア</div>
+                {smallAreas.length ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {smallAreas.map((area) => (
+                      <label
+                        key={area.code}
+                        className="flex items-center gap-2 rounded-xl border border-cream-300 bg-white px-3 py-2"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={area.checked}
+                          onChange={(event) => onToggleSmallArea(area.code, event.target.checked)}
+                          className="rounded"
+                        />
+                        <span className="text-sm text-coffee-800">
+                          {area.name}
+                          {area.count ? `（${area.count}）` : ""}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-coffee-600">
+                    選択中の条件に合う小エリアはありません。
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
               <label className="block">

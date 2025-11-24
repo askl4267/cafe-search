@@ -13,13 +13,32 @@ import FilterPanel from "../components/FilterPanel";
 import CafeGrid from "../components/CafeGrid";
 
 const API_BASE = "https://cafe-search-api.askl4267.workers.dev";
-
 const placeholderImage = "https://placehold.co/600x450?text=Cafe";
 
+type ParkingFilter = "any" | "has" | "none";
+type SmokingFilter = "any" | "non_smoking" | "has_non_smoking";
 type CountMap = Record<string, number>;
 type JsonRecord = Record<string, unknown>;
 
-const toStringValue = (value: unknown, fallback = "") =>
+type AreaCountEntry = {
+  code?: string;
+  cnt?: number;
+  count?: number;
+};
+
+type AreaCountsResponse = {
+  middle?: AreaCountEntry[];
+  small?: AreaCountEntry[];
+};
+
+type SearchResponse = {
+  items?: unknown;
+  total?: unknown;
+  total_pages?: unknown;
+  page?: unknown;
+};
+
+const toStringValue = (value: unknown, fallback = ""): string =>
   typeof value === "string" ? value : fallback;
 
 const toNumberValue = (value: unknown, fallback: number) => {
@@ -41,6 +60,7 @@ const asRecord = (value: unknown): JsonRecord | undefined => {
 };
 
 const mapToCafe = (item: JsonRecord): Cafe => {
+  // APIの写真URLは階層が深く揺れがあるため、取得できる順に優先度を決めて拾う
   const record = item;
   const photoL = toStringValue(record["photo_l"]);
   const photoRecord = asRecord(record["photo"]);
@@ -60,16 +80,26 @@ const mapToCafe = (item: JsonRecord): Cafe => {
 
 const sortCodes = (codes: string[]) => [...codes].sort((a, b) => a.localeCompare(b));
 
+// API側で件数キーがcnt/countどちらでも届くため、ここで吸収してMapに整形する
+const toCountMap = (entries: AreaCountEntry[] | undefined): CountMap =>
+  (entries || []).reduce((acc, entry) => {
+    if (entry?.code) {
+      const value = toNumberValue(entry.cnt ?? entry.count, 0);
+      acc[entry.code] = value;
+    }
+    return acc;
+  }, {} as CountMap);
+
 export default function Home() {
-  const [middleMaster, setMiddleMaster] = useState<MidArea[]>([]);
-  const [smallMaster, setSmallMaster] = useState<SmallArea[]>([]);
+  const [middleAreas, setMiddleAreas] = useState<MidArea[]>([]);
+  const [smallAreas, setSmallAreas] = useState<SmallArea[]>([]);
   const [midCounts, setMidCounts] = useState<CountMap>({});
   const [smallCounts, setSmallCounts] = useState<CountMap>({});
   const [selectedMidCodes, setSelectedMidCodes] = useState<string[]>([]);
   const [selectedSmallCodes, setSelectedSmallCodes] = useState<string[]>([]);
-  const [parking, setParking] = useState<"any" | "has" | "none">("any");
-  const [smoking, setSmoking] = useState<"any" | "non_smoking" | "has_non_smoking">("any");
-  const [cards, setCards] = useState<Cafe[]>([]);
+  const [parking, setParking] = useState<ParkingFilter>("any");
+  const [smoking, setSmoking] = useState<SmokingFilter>("any");
+  const [cafes, setCafes] = useState<Cafe[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -79,64 +109,63 @@ export default function Home() {
 
   const selectedMidSet = useMemo(() => new Set(selectedMidCodes), [selectedMidCodes]);
   const selectedSmallSet = useMemo(() => new Set(selectedSmallCodes), [selectedSmallCodes]);
+  const hasSelectedMiddleArea = selectedMidCodes.length > 0;
 
-type AreaCountEntry = {
-  code?: string;
-  cnt?: number;
-  count?: number;
-};
-
-const fetchAreaCounts = useCallback(async () => {
-  const params = new URLSearchParams({
-    parking,
-    smoking,
-  });
-    if (selectedMidCodes.length) {
+  const buildAreaCountParams = useCallback(() => {
+    const params = new URLSearchParams({
+      parking,
+      smoking,
+    });
+    if (hasSelectedMiddleArea) {
       params.set("middle", selectedMidCodes.join(","));
     }
+    return params;
+  }, [parking, smoking, hasSelectedMiddleArea, selectedMidCodes]);
+
+  const fetchAreaCounts = useCallback(async () => {
+    const params = buildAreaCountParams();
     const response = await fetch(`${API_BASE}/area_counts?${params.toString()}`);
     if (!response.ok) {
       throw new Error("件数の取得に失敗しました");
     }
-    const data = await response.json();
-    const toCountMap = (entries: AreaCountEntry[] | undefined): CountMap => {
-      return (entries || []).reduce((acc, entry) => {
-        if (entry?.code) {
-          const value = toNumberValue(entry.cnt ?? entry.count, 0);
-          acc[entry.code] = value;
-        }
-        return acc;
-      }, {} as CountMap);
-    };
+    const data = (await response.json()) as AreaCountsResponse;
     return {
       midMap: toCountMap(data.middle),
       smallMap: toCountMap(data.small),
     };
-  }, [parking, smoking, selectedMidCodes]);
+  }, [buildAreaCountParams]);
+
+  const buildSearchParams = useCallback(
+    (page: number) => {
+      const params = new URLSearchParams({
+        parking,
+        smoking,
+        page: String(page),
+      });
+      if (hasSelectedMiddleArea) {
+        params.set("middle", selectedMidCodes.join(","));
+      }
+      if (selectedSmallCodes.length) {
+        params.set("small", selectedSmallCodes.join(","));
+      }
+      return params;
+    },
+    [hasSelectedMiddleArea, parking, selectedMidCodes, selectedSmallCodes, smoking],
+  );
 
   const runSearch = useCallback(
     async (page = 1) => {
       setLoading(true);
       setSearchError(null);
       try {
-        const params = new URLSearchParams({
-          parking,
-          smoking,
-          page: String(page),
-        });
-        if (selectedMidCodes.length) {
-          params.set("middle", selectedMidCodes.join(","));
-        }
-        if (selectedSmallCodes.length) {
-          params.set("small", selectedSmallCodes.join(","));
-        }
+        const params = buildSearchParams(page);
         const response = await fetch(`${API_BASE}/search?${params.toString()}`);
         if (!response.ok) {
           throw new Error("検索結果の取得に失敗しました");
         }
-        const data = (await response.json()) as JsonRecord;
+        const data = (await response.json()) as SearchResponse;
         const items = Array.isArray(data.items) ? data.items : [];
-        setCards(
+        setCafes(
           items.map((entry) =>
             mapToCafe((typeof entry === "object" && entry !== null ? entry : {}) as JsonRecord),
           ),
@@ -145,7 +174,7 @@ const fetchAreaCounts = useCallback(async () => {
         setTotalPages(Math.max(1, toNumberValue(data.total_pages, 1)));
         setCurrentPage(toNumberValue(data.page ?? page, page));
       } catch (error) {
-        setCards([]);
+        setCafes([]);
         setTotalResults(0);
         setTotalPages(1);
         setCurrentPage(page);
@@ -154,7 +183,7 @@ const fetchAreaCounts = useCallback(async () => {
         setLoading(false);
       }
     },
-    [parking, smoking, selectedMidCodes, selectedSmallCodes],
+    [buildSearchParams],
   );
 
   const runSearchRef = useRef(runSearch);
@@ -172,9 +201,10 @@ const fetchAreaCounts = useCallback(async () => {
         }
         const data = await response.json();
         if (cancelled) return;
-        setMiddleMaster(data.middle || []);
-        setSmallMaster(data.small || []);
+        setMiddleAreas(data.middle || []);
+        setSmallAreas(data.small || []);
         setAreaError(null);
+        // 初期表示時だけ検索を走らせるため、最新のコールバックを参照経由で実行する
         await runSearchRef.current(1);
       } catch (error) {
         if (cancelled) return;
@@ -188,7 +218,7 @@ const fetchAreaCounts = useCallback(async () => {
   }, []);
 
   useEffect(() => {
-    if (!middleMaster.length) {
+    if (!middleAreas.length) {
       return;
     }
     let alive = true;
@@ -206,7 +236,7 @@ const fetchAreaCounts = useCallback(async () => {
     return () => {
       alive = false;
     };
-  }, [middleMaster.length, fetchAreaCounts]);
+  }, [middleAreas.length, fetchAreaCounts]);
 
   const handleMidToggle = (code: string) => {
     setSelectedMidCodes((prev) => {
@@ -223,6 +253,14 @@ const fetchAreaCounts = useCallback(async () => {
     });
   };
 
+  const handleParkingChange = (value: string) => {
+    setParking(value as ParkingFilter);
+  };
+
+  const handleSmokingChange = (value: string) => {
+    setSmoking(value as SmokingFilter);
+  };
+
   const handlePageChange = useCallback(
     (page: number) => {
       runSearch(page);
@@ -232,19 +270,19 @@ const fetchAreaCounts = useCallback(async () => {
 
   const midAreas: MidAreaDisplay[] = useMemo(
     () =>
-      middleMaster.map((area) => ({
+      middleAreas.map((area) => ({
         ...area,
         count: midCounts[area.code] ?? 0,
         selected: selectedMidSet.has(area.code),
       })),
-    [middleMaster, midCounts, selectedMidSet],
+    [midCounts, middleAreas, selectedMidSet],
   );
 
   const smallAreaCandidates: SmallAreaDisplay[] = useMemo(() => {
-    if (!selectedMidCodes.length) {
+    if (!hasSelectedMiddleArea) {
       return [];
     }
-    return smallMaster
+    return smallAreas
       .map((area) => ({
         ...area,
         count: smallCounts[area.code] ?? 0,
@@ -252,7 +290,7 @@ const fetchAreaCounts = useCallback(async () => {
       }))
       .filter((area) => (area.count ?? 0) > 0)
       .sort((a, b) => a.name.localeCompare(b.name, "ja"));
-  }, [selectedMidCodes.length, selectedSmallSet, smallMaster, smallCounts]);
+  }, [hasSelectedMiddleArea, selectedSmallSet, smallAreas, smallCounts]);
 
   return (
     <div className="min-h-screen text-coffee-900">
@@ -263,12 +301,12 @@ const fetchAreaCounts = useCallback(async () => {
           midAreas={midAreas}
           onToggleMidArea={handleMidToggle}
           smallAreas={smallAreaCandidates}
-          showSmallPanel={Boolean(selectedMidCodes.length)}
+          showSmallPanel={hasSelectedMiddleArea}
           onToggleSmallArea={handleSmallToggle}
           parking={parking}
           smoking={smoking}
-          onParkingChange={(value) => setParking(value as typeof parking)}
-          onSmokingChange={(value) => setSmoking(value as typeof smoking)}
+          onParkingChange={handleParkingChange}
+          onSmokingChange={handleSmokingChange}
           onSearch={() => runSearch(1)}
         />
         {areaError && (
@@ -277,7 +315,7 @@ const fetchAreaCounts = useCallback(async () => {
           </div>
         )}
         <CafeGrid
-          cafes={cards}
+          cafes={cafes}
           summary={totalResults}
           loading={loading}
           totalPages={totalPages}
