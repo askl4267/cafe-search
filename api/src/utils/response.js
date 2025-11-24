@@ -4,6 +4,7 @@ export const CORS = {
   "access-control-allow-headers": "content-type",
 };
 
+// 全 API で共通利用する JSON レスポンス作成ヘルパー
 export function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,

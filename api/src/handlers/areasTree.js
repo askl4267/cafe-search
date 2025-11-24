@@ -2,16 +2,16 @@ import { sql } from "drizzle-orm";
 import { json } from "../utils/response";
 import { shops } from "../db/schema";
 import { buildAmenityFilters, combineFilters, applyWhere } from "../utils/filters";
+import { parseStringParam } from "../utils/query";
 
 export async function handleAreasTree(req, env, db) {
   const url = new URL(req.url);
-  const parking = url.searchParams.get("parking") ?? "any";
-  const smoking = url.searchParams.get("smoking") ?? "any";
+  const parking = parseStringParam(url, "parking", "any");
+  const smoking = parseStringParam(url, "smoking", "any");
 
-  const whereClause = combineFilters(
-    buildAmenityFilters({ parking, smoking })
-  );
+  const whereClause = combineFilters(buildAmenityFilters({ parking, smoking }));
 
+  // 中エリアの件数付きリスト
   const middleRows = await applyWhere(
     db
       .select({
@@ -23,6 +23,7 @@ export async function handleAreasTree(req, env, db) {
     whereClause
   ).groupBy(shops.middleAreaCode, shops.middleAreaName);
 
+  // 小エリアの件数付きリスト（親コードも含めておく）
   const smallRows = await applyWhere(
     db
       .select({
