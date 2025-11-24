@@ -24,40 +24,18 @@ export default {
     // 以降のハンドラーで共有する D1 接続を初期化。
     const db = getDb(env);
 
-    // GET /search:
-    // クエリパラメータを基に店舗検索を行い、一覧を返却する。
-    if (url.pathname === "/search" && req.method === "GET") {
-      return handleSearch(req, env, db);
-    }
-
-    // GET /shop:
-    // クエリ文字列の id をキーに、単一店舗の詳細情報を取得する。
-    if (url.pathname === "/shop" && req.method === "GET") {
-      return handleShop(req, env, db);
-    }
-
-    // GET /areas:
-    // 中エリア・小エリアのコードおよび名称をフラットな一覧として返却する。
-    if (url.pathname === "/areas" && req.method === "GET") {
-      return handleAreas(req, env, db);
-    }
-
-    // GET /area_counts:
-    // 検索条件にマッチする店舗件数をエリア単位で集計して返却する。
-    if (url.pathname === "/area_counts" && req.method === "GET") {
-      return handleAreaCounts(req, env, db);
-    }
-
-    // GET /areas_tree:
-    // 中エリアを親、小エリアを子とするツリー構造を返却する。
-    if (url.pathname === "/areas_tree" && req.method === "GET") {
-      return handleAreasTree(req, env, db);
-    }
-
-    // ★ GET /recommend
-    // 中エリア単位で候補を絞り、ロジックに応じてレコメンド店舗を返す。
-    if (url.pathname === "/recommend" && req.method === "GET") {
-      return handleRecommend(req, env, db);
+    // GET エンドポイント群をマッピング。フローを簡潔に保つ。
+    const getHandlers = {
+      "/search": handleSearch,
+      "/shop": handleShop,
+      "/areas": handleAreas,
+      "/area_counts": handleAreaCounts,
+      "/areas_tree": handleAreasTree,
+      "/recommend": handleRecommend,
+    };
+    const handler = req.method === "GET" ? getHandlers[url.pathname] : undefined;
+    if (handler) {
+      return handler(req, env, db);
     }
 
     // 未定義パスへのフォールバック応答。

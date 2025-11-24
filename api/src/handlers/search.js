@@ -2,23 +2,24 @@ import { sql } from "drizzle-orm";
 import { applyWhere, buildSearchFilters, combineFilters } from "../utils/filters";
 import { shops } from "../db/schema";
 import { json } from "../utils/response";
+import { parseBoundedInt, parseListParam, parseStringParam } from "../utils/query";
 
 const PAGE_SIZE = 15;
 
 export async function handleSearch(req, env, db) {
   const url = new URL(req.url);
 
-  const middle = (url.searchParams.get("middle") ?? "").split(",").filter(Boolean);
-  const small = (url.searchParams.get("small") ?? "").split(",").filter(Boolean);
-  const parking = url.searchParams.get("parking") ?? "any";
-  const smoking = url.searchParams.get("smoking") ?? "any";
-  const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
+  const middle = parseListParam(url, "middle");
+  const small = parseListParam(url, "small");
+  const parking = parseStringParam(url, "parking", "any");
+  const smoking = parseStringParam(url, "smoking", "any");
+  const page = parseBoundedInt(url.searchParams.get("page"), { fallback: 1, min: 1 });
   const offset = (page - 1) * PAGE_SIZE;
 
-  const whereClause = combineFilters(
-    buildSearchFilters({ middle, small, parking, smoking })
-  );
+  // パラメータに応じた WHERE 句を組み立てる
+  const whereClause = combineFilters(buildSearchFilters({ middle, small, parking, smoking }));
 
+  // 件数は同じ条件で集計し、ページング情報を算出
   const countRows = await applyWhere(
     db.select({ value: sql`COUNT(*)`.as("value") }).from(shops),
     whereClause
@@ -26,6 +27,7 @@ export async function handleSearch(req, env, db) {
   const total = Number(countRows[0]?.value ?? 0);
   const total_pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  // 一覧本体を取得。列名はフロントの期待形式に合わせて snake_case に揃える
   const items = await applyWhere(
     db
       .select({
